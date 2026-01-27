@@ -3,8 +3,8 @@ import kagglehub
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from tripadvisor_dataset_settings import (
-    DATASET_FILE_NAME, DATASET_NAME, NEG_RATINGS, POS_RATINGS, RANDOM_STATE, TEST_SIZE, TEXT_COL, RATING_COL
+from src.constants import (
+    DATASET_FILE_NAME, DATASET_NAME, NEG_RATINGS, PATHS, POS_RATINGS, RANDOM_STATE, TEST_SIZE, TEXT_COL, RATING_COL
 ) 
 
 
@@ -26,7 +26,7 @@ def load_dataset_from_csv() -> pd.DataFrame:
 
 
 def to_binary_labels(df: pd.DataFrame) -> pd.DataFrame:
-    """Substitute ratings with binary values for positive and negative review
+    """Substitute ratings with binary values for positive and negative review flag
 
     Args:
         df (pd.DataFrame): the data in a dataframe object
@@ -68,15 +68,11 @@ def save_splits(train, test):
         train (_type_): train dataframe
         test (_type_): test dataframe
     """
-    project_dir = Path(__file__).resolve().parents[1]
-    processed_data_path = project_dir / "data"
-    processed_data_path.mkdir(parents=True, exist_ok=True)
-
     (X_train, y_train) = train
     (X_test, y_test) = test
 
-    pd.DataFrame({TEXT_COL: X_train, "label": y_train}).to_csv(processed_data_path / "train.csv", index=False)
-    pd.DataFrame({TEXT_COL: X_test, "label": y_test}).to_csv(processed_data_path / "test.csv", index=False)
+    pd.DataFrame({TEXT_COL: X_train, "label": y_train}).to_csv(PATHS.data_processed / "train.csv", index=False)
+    pd.DataFrame({TEXT_COL: X_test, "label": y_test}).to_csv(PATHS.data_processed / "test.csv", index=False)
 
 
 def main():
