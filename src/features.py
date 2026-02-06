@@ -1,30 +1,47 @@
+"""
+Features' processing functions.
+"""
+
+from __future__ import annotations
+
 import joblib
-from scipy import sparse
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 from src.constants import PATHS, TFIDF_MAX_FEATURES, TFIDF_NGRAM_RANGE
 
 VECTORIZER_PATH = PATHS.artifacts / "tfidf.joblib"
 
-def build_vectorizer() -> TfidfVectorizer:
-    return TfidfVectorizer(
+
+def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
+    """Fits a TF-IDF vectorizer to the reviews."""
+
+    vectorizer = TfidfVectorizer(
         max_features=TFIDF_MAX_FEATURES,
         ngram_range=TFIDF_NGRAM_RANGE,
         lowercase=True,
-        strip_accents=None
+        strip_accents=None,
     )
+    feature_matrix = vectorizer.fit_transform(reviews).toarray()
+    return vectorizer, feature_matrix
 
-def fit_vectorizer(texts):
-    vec = build_vectorizer()
-    X = vec.fit_transform(texts)
-    return vec, X
 
-def transform(vec: TfidfVectorizer, texts):
-    X = vec.transform(texts)
-    return X
+def transform(
+    vectorizer: TfidfVectorizer, reviews: list[str]
+) -> np.ndarray:
+    """Transforms the reviews using the given vectorizer."""
 
-def save_vectorizer(vec: TfidfVectorizer):
+    return vectorizer.transform(reviews).toarray()
+
+
+def save_vectorizer(vectorizer: TfidfVectorizer) -> None:
+    """Saves a TF-IDF vectorizer to the artifacts directory."""
+
     PATHS.artifacts.mkdir(parents=True, exist_ok=True)
-    joblib.dump(vec, VECTORIZER_PATH)
+    joblib.dump(vectorizer, VECTORIZER_PATH)
+
 
 def load_vectorizer() -> TfidfVectorizer:
+    """Loads a TF-IDF vectorizer from the artifacts directory."""
+
     return joblib.load(VECTORIZER_PATH)

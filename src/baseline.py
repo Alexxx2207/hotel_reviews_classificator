@@ -1,22 +1,48 @@
+"""
+Baseline model for the project.
+"""
+
+from __future__ import annotations
+
 import joblib
+import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
+
 from src.constants import PATHS
 
 BASELINE_PATH = PATHS.artifacts / "baseline_logreg.joblib"
 
-def train_baseline(x_train, y_train):
-    clf = LogisticRegression(max_iter=2000, n_jobs=None)
-    clf.fit(x_train, y_train)
-    return clf
 
-def evaluate_baseline(clf, x, y):
-    y_pred = clf.predict(x)
-    return classification_report(y, y_pred, output_dict=True)
+def train_baseline(
+    x_train: np.ndarray, y_train: np.ndarray
+) -> LogisticRegression:
+    """Trains a baseline logistic regression classifier."""
 
-def save_baseline(clf):
+    classifier = LogisticRegression(max_iter=2000, n_jobs=None)
+    classifier.fit(x_train, y_train)
+    return classifier
+
+
+def evaluate_baseline(
+    classifier: LogisticRegression,
+    x: np.ndarray,
+    y: np.ndarray,
+) -> dict:
+    """Evaluates a baseline logistic regression classifier."""
+
+    prediction = classifier.predict(x)
+    return classification_report(y, prediction, output_dict=True)
+
+
+def save_baseline(classifier: LogisticRegression) -> None:
+    """Saves a baseline logistic regression classifier in the artifacts directory."""
+
     PATHS.artifacts.mkdir(parents=True, exist_ok=True)
-    joblib.dump(clf, BASELINE_PATH)
+    joblib.dump(classifier, BASELINE_PATH)
 
-def load_baseline():
+
+def load_baseline() -> LogisticRegression:
+    """Loads a baseline logistic regression classifier from the artifacts directory."""
+
     return joblib.load(BASELINE_PATH)

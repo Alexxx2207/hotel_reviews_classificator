@@ -1,4 +1,8 @@
-from dataclasses import dataclass
+"""
+Constants for the project.
+"""
+
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -26,10 +30,19 @@ WEIGHT_DECAY = 1e-4
 
 @dataclass(frozen=True)
 class Paths:
-    project_root: Path = Path(__file__).resolve().parents[1]
-    data_processed: Path = project_root / "data"
-    artifacts: Path = project_root / "artifacts"
-    metrics: Path = artifacts / "metrics"
-    plots: Path = artifacts / "plots"
+    """Paths to the important directories for the project."""
+
+    project_root: Path = field(default_factory=lambda: Path(__file__).resolve().parents[1])
+    data_processed: Path = field(init=False)
+    artifacts: Path = field(init=False)
+    metrics: Path = field(init=False)
+    plots: Path = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "data_processed", self.project_root / "data")
+        object.__setattr__(self, "artifacts", self.project_root / "artifacts")
+        object.__setattr__(self, "metrics", self.artifacts / "metrics")
+        object.__setattr__(self, "plots", self.artifacts / "plots")
+
 
 PATHS = Paths()

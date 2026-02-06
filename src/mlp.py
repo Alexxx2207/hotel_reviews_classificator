@@ -1,50 +1,61 @@
-from dataclasses import dataclass
+"""
+Multilayer Perceptron model for the project.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Generator
+
 import numpy as np
+
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from scipy import sparse
+from torch import nn
 
-@dataclass
-class Batch:
-    X: torch.Tensor
-    y: torch.Tensor
 
-def csr_to_torch_sparse(csr: sparse.csr_matrix, device: torch.device) -> torch.Tensor:
-    csr = csr.tocoo()
-    indices = torch.tensor(np.vstack((csr.row, csr.col)), dtype=torch.int64, device=device)
-    values = torch.tensor(csr.data, dtype=torch.float32, device=device)
-    shape = torch.Size(csr.shape)
-    return torch.sparse_coo_tensor(indices, values, shape).coalesce()
+class MLP(nn.Module):
+    """Single hidden-layer MLP: dense TF-IDF -> Linear -> ReLU -> Dropout -> Linear."""
 
-class SparseMLP(nn.Module):
-    """
-    1-скрит слой MLP:
-      sparse TF-IDF -> Linear (через sparse.mm) -> ReLU -> Dropout -> Linear
-    """
-    def __init__(self, in_features: int, hidden: int, dropout: float, num_classes: int = 2) -> None:
+    def __init__(
+        self,
+        in_features: int,
+        hidden: int,
+        dropout: float,
+        num_classes: int = 2,
+    ) -> None:
+        """Initializes the MLP."""
+
         super().__init__()
-        self.W1 = nn.Parameter(torch.empty(in_features, hidden))
-        self.b1 = nn.Parameter(torch.zeros(hidden))
-        self.fc2 = nn.Linear(hidden, num_classes)
+        self.hidden_weight = nn.Parameter(torch.empty(in_features, hidden))
+        self.hidden_bias = nn.Parameter(torch.zeros(hidden))
+        self.output_layer = nn.Linear(hidden, num_classes)
         self.dropout = nn.Dropout(dropout)
+        nn.init.xavier_uniform_(self.hidden_weight)
 
-        nn.init.xavier_uniform_(self.W1)
-
-    def forward(self, x_sparse: torch.Tensor) -> torch.Tensor:
-        # x_sparse: [B, in_features] sparse
-        h = torch.sparse.mm(x_sparse, self.W1) + self.b1  # [B, hidden]
-        h = F.relu(h)
-        h = self.dropout(h)
-        logits = self.fc2(h)
+    def forward(self, input_batch: nn.Tensor) -> nn.Tensor:
+        """Forward pass of the MLP."""
+        hidden_preactivation = (
+            input_batch @ self.hidden_weight + self.hidden_bias
+        )
+        hidden_activation = nn.functional.relu(hidden_preactivation)
+        hidden_dropped = self.dropout(hidden_activation)
+        logits = self.output_layer(hidden_dropped)
         return logits
 
-def iter_minibatches(X_csr: sparse.csr_matrix, y: np.ndarray, batch_size: int, shuffle: bool = True):
-    n = X_csr.shape[0]
-    idx = np.arange(n)
-    if shuffle:
-        np.random.shuffle(idx)
 
-    for start in range(0, n, batch_size):
-        batch_idx = idx[start:start + batch_size]
-        yield X_csr[batch_idx], y[batch_idx]
+def iter_minibatches(
+    features: np.ndarray,
+    labels: np.ndarray,
+    batch_size: int,
+    shuffle: bool = True,
+) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
+    """Iterates over the data in batches."""
+
+    num_samples = features.shape[0]
+    sample_indices = np.arange(num_samples)
+    if shuffle:
+        np.random.shuffle(sample_indices)
+    for batch_start in range(0, num_samples, batch_size):
+        batch_indices = sample_indices[
+            batch_start : batch_start + batch_size
+        ]
+        yield features[batch_indices], labels[batch_indices]

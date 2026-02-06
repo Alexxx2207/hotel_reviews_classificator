@@ -1,84 +1,89 @@
+"""
+Sets up the TripAdvisor dataset for the project.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
+
 import kagglehub
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from src.constants import (
-    DATASET_FILE_NAME, DATASET_NAME, NEG_RATINGS, PATHS, POS_RATINGS, RANDOM_STATE, TEST_SIZE, TEXT_COL, RATING_COL
-) 
+    DATASET_FILE_NAME,
+    DATASET_NAME,
+    NEG_RATINGS,
+    PATHS,
+    POS_RATINGS,
+    RANDOM_STATE,
+    RATING_COL,
+    TEST_SIZE,
+    TEXT_COL,
+)
 
 
 def load_dataset_from_csv() -> pd.DataFrame:
-    """Loads data from a csv file in a dataframe table. 
+    """Load data from the Kaggle dataset CSV into a DataFrame."""
 
-    Returns:
-        pd.DataFrame: csv data in the dataframe
-    """
-    
     dataset_dir = kagglehub.dataset_download(DATASET_NAME)
-
     df = pd.read_csv(Path(dataset_dir) / DATASET_FILE_NAME)
     df = df[[TEXT_COL, RATING_COL]].dropna()
     df[TEXT_COL] = df[TEXT_COL].astype(str)
     df[RATING_COL] = df[RATING_COL].astype(int)
-    
     return df
 
 
 def to_binary_labels(df: pd.DataFrame) -> pd.DataFrame:
-    """Substitute ratings with binary values for positive and negative review flag
+    """Replace ratings with binary labels (0=negative, 1=positive)."""
 
-    Args:
-        df (pd.DataFrame): the data in a dataframe object
-
-    Returns:
-        pd.DataFrame: new dataframe object with applied substitution
-    """
-    
     df = df[df[RATING_COL].isin(NEG_RATINGS | POS_RATINGS)].copy()
-    
-    df["label"] = df[RATING_COL].apply(lambda r: 0 if r in NEG_RATINGS else 1)
-    
+    df["label"] = df[RATING_COL].apply(
+        lambda r: 0 if r in NEG_RATINGS else 1
+    )
     return df[[TEXT_COL, "label"]]
 
 
-def split_train_test(df: pd.DataFrame):
-    """Split dataset in train and test data
+def split_train_test(
+    df: pd.DataFrame,
+) -> tuple[
+    tuple[pd.Series, pd.Series],
+    tuple[pd.Series, pd.Series],
+]:
+    """Split dataset into train and test with stratification."""
 
-    Args:
-        df (pd.DataFrame): data to split
-
-    Returns:
-        _type_: tuple of train,test dataset split
-    """
-    
     x_train, x_test, y_train, y_test = train_test_split(
-        df[TEXT_COL], df["label"],
+        df[TEXT_COL],
+        df["label"],
         test_size=TEST_SIZE,
         random_state=RANDOM_STATE,
-        stratify=df["label"]
+        stratify=df["label"],
     )
     return (x_train, y_train), (x_test, y_test)
 
 
-def save_splits(train, test):
-    """Saves the splits on the disk
+def save_splits(
+    train: tuple[pd.Series, pd.Series],
+    test: tuple[pd.Series, pd.Series],
+) -> None:
+    """Save train and test splits to CSV in the processed data directory."""
 
-    Args:
-        train (_type_): train dataframe
-        test (_type_): test dataframe
-    """
-    (X_train, y_train) = train
-    (X_test, y_test) = test
+    (x_train, y_train) = train
+    (x_test, y_test) = test
+    PATHS.data_processed.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({TEXT_COL: x_train, "label": y_train}).to_csv(
+        PATHS.data_processed / "train.csv", index=False
+    )
+    pd.DataFrame({TEXT_COL: x_test, "label": y_test}).to_csv(
+        PATHS.data_processed / "test.csv", index=False
+    )
 
-    pd.DataFrame({TEXT_COL: X_train, "label": y_train}).to_csv(PATHS.data_processed / "train.csv", index=False)
-    pd.DataFrame({TEXT_COL: X_test, "label": y_test}).to_csv(PATHS.data_processed / "test.csv", index=False)
 
+def main() -> None:
+    """Main function to run the setup."""
 
-def main():
     df = load_dataset_from_csv()
     df = to_binary_labels(df)
-    
     train, test = split_train_test(df)
     save_splits(train, test)
 
