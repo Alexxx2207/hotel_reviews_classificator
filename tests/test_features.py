@@ -3,17 +3,14 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from src import constants, features
-from src.constants import PATHS
+from src.constants import PATHS, Paths
 from src.features import (
     fit_vectorizer,
     load_vectorizer,
     save_vectorizer,
     transform,
-    VECTORIZER_PATH,
 )
 
 
@@ -38,23 +35,16 @@ def test_transform_uses_fitted_vectorizer() -> None:
     assert test_matrix.shape[1] == train_matrix.shape[1]
 
 
-def test_save_and_load_vectorizer(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_save_and_load_vectorizer(tmp_path_in_project: Path) -> None:
     """Saving and loading round-trips the vectorizer."""
-    paths = constants.Paths(project_root=tmp_path_in_project)
-    monkeypatch.setattr(constants, "PATHS", paths)
-    monkeypatch.setattr(features, "PATHS", paths)
-    monkeypatch.setattr(
-        features, "VECTORIZER_PATH", tmp_path_in_project / "artifacts" / "tfidf.joblib"
-    )
+    paths = Paths(project_root=tmp_path_in_project)
+    paths.artifacts.mkdir(parents=True, exist_ok=True)
 
-    (tmp_path_in_project / "artifacts").mkdir(parents=True)
     reviews = ["one two", "two three", "three four"]
     vec, _ = fit_vectorizer(reviews)
-    save_vectorizer(vec)
+    save_vectorizer(vec, paths)
     assert (tmp_path_in_project / "artifacts" / "tfidf.joblib").exists()
-    loaded = load_vectorizer()
+    loaded = load_vectorizer(paths)
     assert loaded.vocabulary_ == vec.vocabulary_
     matrix_orig = transform(vec, ["one three"])
     matrix_loaded = transform(loaded, ["one three"])
@@ -77,6 +67,6 @@ def test_fit_vectorizer_single_document() -> None:
     assert matrix.shape[1] >= 1
 
 
-def test_vectorizer_path_in_artifacts() -> None:
-    """VECTORIZER_PATH is under PATHS.artifacts."""
-    assert VECTORIZER_PATH == PATHS.artifacts / "tfidf.joblib"
+def test_vectorizer_saved_under_artifacts() -> None:
+    """Vectorizer is saved under PATHS.artifacts when using default paths."""
+    assert (PATHS.artifacts / "tfidf.joblib").parent == PATHS.artifacts

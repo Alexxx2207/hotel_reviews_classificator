@@ -8,9 +8,7 @@ import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from src.constants import PATHS, TFIDF_MAX_FEATURES, TFIDF_NGRAM_RANGE
-
-VECTORIZER_PATH = PATHS.artifacts / "tfidf.joblib"
+from src.constants import PATHS, TFIDF_MAX_FEATURES, TFIDF_NGRAM_RANGE, Paths
 
 
 def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
@@ -34,14 +32,17 @@ def transform(
     return vectorizer.transform(reviews).toarray()
 
 
-def save_vectorizer(vectorizer: TfidfVectorizer) -> None:
+def save_vectorizer(
+    vectorizer: TfidfVectorizer,
+    paths: Paths | None = None,
+) -> None:
     """Saves a TF-IDF vectorizer to the artifacts directory."""
+    p = paths or PATHS
+    p.artifacts.mkdir(parents=True, exist_ok=True)
+    joblib.dump(vectorizer, p.artifacts / "tfidf.joblib")
 
-    PATHS.artifacts.mkdir(parents=True, exist_ok=True)
-    joblib.dump(vectorizer, VECTORIZER_PATH)
 
-
-def load_vectorizer() -> TfidfVectorizer:
+def load_vectorizer(paths: Paths | None = None) -> TfidfVectorizer:
     """Loads a TF-IDF vectorizer from the artifacts directory."""
-
-    return joblib.load(VECTORIZER_PATH)
+    p = paths or PATHS
+    return joblib.load(p.artifacts / "tfidf.joblib")

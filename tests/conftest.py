@@ -9,7 +9,6 @@ import pytest
 from src.constants import Paths
 
 
-# Directory under tests/ for temp data (avoids system temp / PermissionError on Windows)
 TESTS_TMP_ROOT = Path(__file__).resolve().parent / ".tmp"
 
 

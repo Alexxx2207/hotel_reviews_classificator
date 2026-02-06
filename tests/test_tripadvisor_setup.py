@@ -4,10 +4,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
-import src.constants as constants
-from src.constants import RATING_COL, TEXT_COL
+from src.constants import Paths, RATING_COL, TEXT_COL
 from src.tripadvisor_setup import (
     load_dataset_from_csv,
     to_binary_labels,
@@ -22,13 +20,12 @@ def test_to_binary_labels() -> None:
 
     df = pd.DataFrame({
         TEXT_COL: ["a", "b", "c", "d", "e"],
-        RATING_COL: [1, 2, 4, 5, 3],  # 3 dropped (neutral)
+        RATING_COL: [1, 2, 4, 5, 3],
     })
     out = to_binary_labels(df)
     assert list(out.columns) == [TEXT_COL, "label"]
     assert len(out) == 4
     assert set(out["label"]) == {0, 1}
-    # First two rows were rating 1,2 (negative) -> label 0; next two 4,5 (positive) -> label 1
     assert out["label"].iloc[0] == 0
     assert out["label"].iloc[2] == 1
 
@@ -52,17 +49,12 @@ def test_split_train_test_stratified() -> None:
     assert set(y_test) == {0, 1}
 
 
-def test_save_splits_writes_csv(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_save_splits_writes_csv(tmp_path_in_project: Path) -> None:
     """save_splits writes train.csv and test.csv to data_processed."""
-
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
-    monkeypatch.setattr("src.tripadvisor_setup.PATHS", constants.PATHS)
-
+    paths = Paths(project_root=tmp_path_in_project)
     train = (pd.Series(["a", "b"]), pd.Series([0, 1]))
     test = (pd.Series(["c"]), pd.Series([1]))
-    save_splits(train, test)
+    save_splits(train, test, paths)
 
     train_path = tmp_path_in_project / "data" / "train.csv"
     test_path = tmp_path_in_project / "data" / "test.csv"
@@ -76,9 +68,7 @@ def test_save_splits_writes_csv(
     assert list(test_df["label"]) == [1]
 
 
-def test_load_dataset_from_csv_mocked(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_load_dataset_from_csv_mocked(tmp_path_in_project: Path) -> None:
     """load_dataset_from_csv returns DataFrame when kagglehub returns a local CSV path."""
     from src.constants import DATASET_FILE_NAME
     fake_csv = tmp_path_in_project / DATASET_FILE_NAME
@@ -86,29 +76,26 @@ def test_load_dataset_from_csv_mocked(
         TEXT_COL: ["review one", "review two", "review three"],
         RATING_COL: [1, 5, 3],
     }).to_csv(fake_csv, index=False)
-    monkeypatch.setattr(
+    with patch(
         "src.tripadvisor_setup.kagglehub.dataset_download",
-        lambda _: str(tmp_path_in_project),
-    )
-    df = load_dataset_from_csv()
+        return_value=str(tmp_path_in_project),
+    ):
+        df = load_dataset_from_csv()
     assert len(df) == 3
     assert list(df.columns) == [TEXT_COL, RATING_COL]
     assert df[TEXT_COL].dtype == object
     assert df[RATING_COL].dtype in (pd.Int64Dtype(), "int64", "int32")
 
 
-def test_tripadvisor_main_mocked(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_tripadvisor_main_mocked(tmp_path_in_project: Path) -> None:
     """main() runs pipeline when load_dataset_from_csv is mocked."""
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
-    monkeypatch.setattr("src.tripadvisor_setup.PATHS", constants.PATHS)
+    paths = Paths(project_root=tmp_path_in_project)
     mock_df = pd.DataFrame({
         TEXT_COL: [f"text_{i}" for i in range(20)],
         RATING_COL: [1, 2, 4, 5] * 5,
     })
     with patch("src.tripadvisor_setup.load_dataset_from_csv", return_value=mock_df):
-        tripadvisor_main()
+        tripadvisor_main(paths)
     assert (tmp_path_in_project / "data" / "train.csv").exists()
     assert (tmp_path_in_project / "data" / "test.csv").exists()
     train_df = pd.read_csv(tmp_path_in_project / "data" / "train.csv")

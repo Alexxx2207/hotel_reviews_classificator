@@ -4,71 +4,54 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from src import constants
-from src.constants import PATHS, TEXT_COL
+from src.constants import PATHS, Paths, TEXT_COL
 from src.train import (
     ensure_directories_exist,
     load_split,
+    main as train_main,
     train_mlp_only_train,
 )
 
 
-def test_load_split_returns_texts_and_labels(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_load_split_returns_texts_and_labels(tmp_path_in_project: Path) -> None:
     """load_split returns (list of texts, array of labels)."""
-    from src import constants
-
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
     (tmp_path_in_project / "data").mkdir(parents=True)
     df = pd.DataFrame({
         TEXT_COL: ["a", "b", "c"],
         "label": [0, 1, 0],
     })
     df.to_csv(tmp_path_in_project / "data" / "train.csv", index=False)
-    monkeypatch.setattr("src.train.PATHS", constants.PATHS)
+    paths = Paths(project_root=tmp_path_in_project)
 
-    texts, labels = load_split("train")
+    texts, labels = load_split("train", paths)
     assert texts == ["a", "b", "c"]
     np.testing.assert_array_equal(labels, np.array([0, 1, 0]))
 
 
-def test_ensure_directories_exist(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ensure_directories_exist(tmp_path_in_project: Path) -> None:
     """ensure_directories_exist creates artifacts, metrics, plots."""
-    from src import constants
+    paths = Paths(project_root=tmp_path_in_project)
 
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
-    monkeypatch.setattr("src.train.PATHS", constants.PATHS)
-
-    ensure_directories_exist()
+    ensure_directories_exist(paths)
     assert (tmp_path_in_project / "artifacts").is_dir()
     assert (tmp_path_in_project / "artifacts" / "metrics").is_dir()
     assert (tmp_path_in_project / "artifacts" / "plots").is_dir()
 
 
-def test_train_mlp_only_train_returns_history(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_train_mlp_only_train_returns_history(tmp_path_in_project: Path) -> None:
     """train_mlp_only_train returns history and saves checkpoint."""
-
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
-    monkeypatch.setattr("src.train.PATHS", constants.PATHS)
-    (tmp_path_in_project / "artifacts").mkdir(parents=True)
+    paths = Paths(project_root=tmp_path_in_project)
+    paths.artifacts.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(42)
     n, in_features = 50, 20
     x_train = rng.random((n, in_features)).astype(np.float32)
     y_train = (rng.random(n) > 0.5).astype(np.int64)
 
-    # Override EPOCHS to 1 for speed
-    import src.train as train_mod
-    monkeypatch.setattr(train_mod, "EPOCHS", 1)
-
-    history = train_mlp_only_train(x_train, y_train, in_features)
+    history = train_mlp_only_train(
+        x_train, y_train, in_features, paths=paths, epochs=1
+    )
     assert isinstance(history, list)
     assert len(history) == 1
     assert "epoch" in history[0]
@@ -77,26 +60,16 @@ def test_train_mlp_only_train_returns_history(
     assert (tmp_path_in_project / "artifacts" / "mlp_last.pt").exists()
 
 
-def test_train_main(
-    tmp_path_in_project: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_train_main(tmp_path_in_project: Path) -> None:
     """main() runs full pipeline and creates artifacts + history CSV."""
-    monkeypatch.setattr(constants, "PATHS", constants.Paths(project_root=tmp_path_in_project))
-    monkeypatch.setattr("src.train.PATHS", constants.PATHS)
-    monkeypatch.setattr("src.features.PATHS", constants.PATHS)
-    monkeypatch.setattr("src.features.VECTORIZER_PATH", tmp_path_in_project / "artifacts" / "tfidf.joblib")
-    monkeypatch.setattr("src.baseline.PATHS", constants.PATHS)
-    monkeypatch.setattr("src.baseline.BASELINE_PATH", tmp_path_in_project / "artifacts" / "baseline_logreg.joblib")
-
+    paths = Paths(project_root=tmp_path_in_project)
     (tmp_path_in_project / "data").mkdir(parents=True)
     pd.DataFrame({
         TEXT_COL: ["good hotel"] * 10 + ["bad room"] * 10,
         "label": [1] * 10 + [0] * 10,
     }).to_csv(tmp_path_in_project / "data" / "train.csv", index=False)
 
-    import src.train as train_mod
-    monkeypatch.setattr(train_mod, "EPOCHS", 1)
-    train_mod.main()
+    train_main(paths=paths, epochs=1)
 
     assert (tmp_path_in_project / "artifacts" / "tfidf.joblib").exists()
     assert (tmp_path_in_project / "artifacts" / "baseline_logreg.joblib").exists()

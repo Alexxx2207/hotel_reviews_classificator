@@ -28,15 +28,14 @@ def test_mlp_forward_deterministic_without_dropout() -> None:
 
 
 def test_mlp_has_expected_parameters() -> None:
-    """MLP has hidden_weight, hidden_bias, output_layer, dropout."""
+    """MLP has hidden_layer, output_layer, dropout."""
 
     model = MLP(in_features=6, hidden=3, dropout=0.1)
-    assert hasattr(model, "hidden_weight")
-    assert hasattr(model, "hidden_bias")
+    assert hasattr(model, "hidden_layer")
     assert hasattr(model, "output_layer")
     assert hasattr(model, "dropout")
-    assert model.hidden_weight.shape == (6, 3)
-    assert model.hidden_bias.shape == (3,)
+    assert model.hidden_layer.weight.shape == (3, 6)
+    assert model.hidden_layer.bias.shape == (3,)
 
 
 def test_iter_minibatches_yields_batches() -> None:
@@ -45,10 +44,10 @@ def test_iter_minibatches_yields_batches() -> None:
     X = np.arange(10).reshape(10, 1).astype(np.float64)
     y = np.arange(10)
     batches = list(iter_minibatches(X, y, batch_size=3, shuffle=False))
-    assert len(batches) == 4  # 10/3 -> 4 batches
+    assert len(batches) == 4
     assert batches[0][0].shape == (3, 1)
     assert batches[0][1].shape == (3,)
-    assert batches[-1][0].shape[0] == 1  # last batch has 1 sample
+    assert batches[-1][0].shape[0] == 1
 
 
 def test_iter_minibatches_shuffle_changes_order() -> None:

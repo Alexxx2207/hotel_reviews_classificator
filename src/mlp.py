@@ -25,18 +25,13 @@ class MLP(nn.Module):
         """Initializes the MLP."""
 
         super().__init__()
-        self.hidden_weight = nn.Parameter(torch.empty(in_features, hidden))
-        self.hidden_bias = nn.Parameter(torch.zeros(hidden))
+        self.hidden_layer = nn.Linear(in_features, hidden)
         self.output_layer = nn.Linear(hidden, num_classes)
         self.dropout = nn.Dropout(dropout)
-        nn.init.xavier_uniform_(self.hidden_weight)
 
     def forward(self, input_batch: nn.Tensor) -> nn.Tensor:
         """Forward pass of the MLP."""
-        hidden_preactivation = (
-            input_batch @ self.hidden_weight + self.hidden_bias
-        )
-        hidden_activation = nn.functional.relu(hidden_preactivation)
+        hidden_activation = nn.functional.relu(self.hidden_layer(input_batch))
         hidden_dropped = self.dropout(hidden_activation)
         logits = self.output_layer(hidden_dropped)
         return logits

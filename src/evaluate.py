@@ -15,22 +15,22 @@ import torch
 from sklearn.metrics import classification_report, confusion_matrix
 
 from src.baseline import load_baseline
-from src.constants import BATCH_SIZE, MLP_HIDDEN, PATHS, TEXT_COL
+from src.constants import BATCH_SIZE, MLP_HIDDEN, PATHS, TEXT_COL, Paths
 from src.features import load_vectorizer, transform
 from src.mlp import (MLP, iter_minibatches)
 
 
-def load_split(name: str) -> tuple[list[str], np.ndarray]:
+def load_split(name: str, paths: Paths | None = None) -> tuple[list[str], np.ndarray]:
     """Loads the split data from the given name(train or test)."""
-
-    df = pd.read_csv(PATHS.data_processed / f"{name}.csv")
+    p = paths or PATHS
+    df = pd.read_csv(p.data_processed / f"{name}.csv")
     return df[TEXT_COL].tolist(), df["label"].to_numpy(dtype=np.int64)
 
 
-def plot_history() -> None:
+def plot_history(paths: Paths | None = None) -> None:
     """Plots the training history of the MLP model."""
-
-    hist_path = PATHS.metrics / "mlp_history.csv"
+    p = paths or PATHS
+    hist_path = p.metrics / "mlp_history.csv"
     if not hist_path.exists():
         return
     df = pd.read_csv(hist_path)
@@ -40,7 +40,7 @@ def plot_history() -> None:
     plt.ylabel("Train loss")
     plt.title("MLP Train Loss")
     plt.savefig(
-        PATHS.plots / "mlp_train_loss.png",
+        p.plots / "mlp_train_loss.png",
         dpi=200,
         bbox_inches="tight",
     )
@@ -51,7 +51,7 @@ def plot_history() -> None:
     plt.ylabel("Train macro F1")
     plt.title("MLP Train Macro-F1")
     plt.savefig(
-        PATHS.plots / "mlp_train_macro_f1.png",
+        p.plots / "mlp_train_macro_f1.png",
         dpi=200,
         bbox_inches="tight",
     )
@@ -73,11 +73,12 @@ def save_confusion_matrix(
 
 
 def eval_baseline(
-    reviews_test: np.ndarray, y_test: np.ndarray
+    reviews_test: np.ndarray,
+    y_test: np.ndarray,
+    paths: Paths | None = None,
 ) -> tuple[dict, np.ndarray]:
     """Evaluates the baseline model on the test data."""
-
-    baseline = load_baseline()
+    baseline = load_baseline(paths)
     y_pred = baseline.predict(reviews_test)
     report = classification_report(
         y_test, y_pred, output_dict=True
@@ -132,17 +133,17 @@ def eval_mlp(
     return report, cm
 
 
-def main() -> None:
+def main(paths: Paths | None = None) -> None:
     """Main function to run the evaluation."""
-
-    PATHS.metrics.mkdir(parents=True, exist_ok=True)
-    PATHS.plots.mkdir(parents=True, exist_ok=True)
-    reviews_test_txt, y_test = load_split("test")
-    vec = load_vectorizer()
+    p = paths or PATHS
+    p.metrics.mkdir(parents=True, exist_ok=True)
+    p.plots.mkdir(parents=True, exist_ok=True)
+    reviews_test_txt, y_test = load_split("test", p)
+    vec = load_vectorizer(p)
     reviews_test = transform(vec, reviews_test_txt)
-    b_report, b_cm = eval_baseline(reviews_test, y_test)
+    b_report, b_cm = eval_baseline(reviews_test, y_test, p)
     with open(
-        PATHS.metrics / "baseline_test_report.json",
+        p.metrics / "baseline_test_report.json",
         "w",
         encoding="utf-8",
     ) as f:
@@ -150,12 +151,12 @@ def main() -> None:
     save_confusion_matrix(
         b_cm,
         "Baseline Confusion Matrix (Test)",
-        PATHS.plots / "baseline_cm.png",
+        p.plots / "baseline_cm.png",
     )
-    ckpt = PATHS.artifacts / "mlp_last.pt"
+    ckpt = p.artifacts / "mlp_last.pt"
     m_report, m_cm = eval_mlp(reviews_test, y_test, ckpt)
     with open(
-        PATHS.metrics / "mlp_test_report.json",
+        p.metrics / "mlp_test_report.json",
         "w",
         encoding="utf-8",
     ) as f:
@@ -163,11 +164,11 @@ def main() -> None:
     save_confusion_matrix(
         m_cm,
         "MLP Confusion Matrix (Test)",
-        PATHS.plots / "mlp_cm.png",
+        p.plots / "mlp_cm.png",
     )
-    plot_history()
-    print("Saved metrics to:", PATHS.metrics)
-    print("Saved plots to:", PATHS.plots)
+    plot_history(p)
+    print("Saved metrics to:", p.metrics)
+    print("Saved plots to:", p.plots)
 
 
 if __name__ == "__main__":

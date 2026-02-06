@@ -20,6 +20,7 @@ from src.constants import (
     RATING_COL,
     TEST_SIZE,
     TEXT_COL,
+    Paths,
 )
 
 
@@ -65,27 +66,28 @@ def split_train_test(
 def save_splits(
     train: tuple[pd.Series, pd.Series],
     test: tuple[pd.Series, pd.Series],
+    paths: Paths | None = None,
 ) -> None:
     """Save train and test splits to CSV in the processed data directory."""
-
+    p = paths or PATHS
     (x_train, y_train) = train
     (x_test, y_test) = test
-    PATHS.data_processed.mkdir(parents=True, exist_ok=True)
+    p.data_processed.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({TEXT_COL: x_train, "label": y_train}).to_csv(
-        PATHS.data_processed / "train.csv", index=False
+        p.data_processed / "train.csv", index=False
     )
     pd.DataFrame({TEXT_COL: x_test, "label": y_test}).to_csv(
-        PATHS.data_processed / "test.csv", index=False
+        p.data_processed / "test.csv", index=False
     )
 
 
-def main() -> None:
+def main(paths: Paths | None = None) -> None:
     """Main function to run the setup."""
-
+    p = paths or PATHS
     df = load_dataset_from_csv()
     df = to_binary_labels(df)
     train, test = split_train_test(df)
-    save_splits(train, test)
+    save_splits(train, test, p)
 
 
 if __name__ == "__main__":

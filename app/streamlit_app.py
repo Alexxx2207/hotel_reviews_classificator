@@ -15,16 +15,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.baseline import load_baseline
 from src.constants import MLP_HIDDEN, PATHS
 from src.features import load_vectorizer, transform
-from src.mlp import MLP, _remap_state_dict_for_compat as remap_mlp_state_dict
+from src.mlp import MLP
 
-# Page configuration
 st.set_page_config(
     page_title="Hotel Review Classifier",
     page_icon="🏨",
     layout="wide",
 )
 
-# Custom CSS for better styling
 st.markdown("""
     <style>
     .main-header {
@@ -86,7 +84,7 @@ def load_models() -> tuple[
                 hidden=MLP_HIDDEN,
                 dropout=0.0,
             ).to(device)
-            mlp_model.load_state_dict(remap_mlp_state_dict(ckpt["model_state"]))
+            mlp_model.load_state_dict(ckpt["model_state"])
             mlp_model.eval()
             mlp_device = device
         except Exception as e:
