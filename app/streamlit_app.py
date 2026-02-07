@@ -107,7 +107,7 @@ def load_models() -> tuple[
         hf_model, hf_tokenizer, hf_device = load_hf_model()
     except Exception as e:
         st.warning(
-            f"Hugging Face model (DistilBERT) not loaded: {e}. "
+            f"Hugging Face model not loaded: {e}. "
             "Check your internet connection or try again later."
         )
 
@@ -279,7 +279,7 @@ def main() -> None:
                     )
 
                 if hf_pred is not None and hf_probs is not None:
-                    st.subheader("Hugging Face Model (DistilBERT)")
+                    st.subheader("Hugging Face Model")
                     label_name = get_label_name(hf_pred)
                     confidence = float(hf_probs[hf_pred]) * 100
                     css_class = "positive" if hf_pred == 1 else "negative"
