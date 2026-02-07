@@ -12,11 +12,10 @@ DATASET_FILE_NAME = "tripadvisor_hotel_reviews.csv"
 TEXT_COL = "Review"
 RATING_COL = "Rating"
 
-RANDOM_STATE = 100
 TEST_SIZE = 0.2
 
-NEG_RATINGS = {1, 2}
-POS_RATINGS = {4, 5}
+NEG_RATINGS = [1, 2]
+POS_RATINGS = [4, 5]
 
 TFIDF_MAX_FEATURES = 40000
 TFIDF_NGRAM_RANGE = (1, 2)

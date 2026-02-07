@@ -57,6 +57,7 @@ def load_models() -> tuple[
     Optional[torch.device],
 ]:
     """Load ML models and vectorizer with caching."""
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     try:
         vectorizer = load_vectorizer()
@@ -74,17 +75,17 @@ def load_models() -> tuple[
 
     mlp_model: Optional[MLP] = None
     mlp_device: Optional[torch.device] = None
-    ckpt_path = PATHS.artifacts / "mlp_last.pt"
-    if ckpt_path.exists():
+    checkpoint_path = PATHS.artifacts / "mlp_last.pt"
+    if checkpoint_path.exists():
         try:
-            ckpt = torch.load(ckpt_path, map_location=device)
-            in_features = ckpt["in_features"]
+            checkpoint = torch.load(checkpoint_path, map_location=device)
+            in_features = checkpoint["in_features"]
             mlp_model = MLP(
                 in_features=in_features,
                 hidden=MLP_HIDDEN,
                 dropout=0.0,
             ).to(device)
-            mlp_model.load_state_dict(ckpt["model_state"])
+            mlp_model.load_state_dict(checkpoint["model_state"])
             mlp_model.eval()
             mlp_device = device
         except Exception as e:
@@ -103,11 +104,14 @@ def predict_baseline(
     text: str,
 ) -> tuple[Optional[int], Optional[np.ndarray]]:
     """Predict using baseline logistic regression model."""
+
     if model is None:
         return None, None
-    X = transform(vectorizer, [text])
-    prediction = int(model.predict(X)[0])
-    probabilities = model.predict_proba(X)[0]
+
+    review_vector = transform(vectorizer, [text])
+    prediction = int(model.predict(review_vector)[0])
+    probabilities = model.predict_proba(review_vector)[0]
+
     return prediction, probabilities
 
 
@@ -118,15 +122,19 @@ def predict_mlp(
     text: str,
 ) -> tuple[Optional[int], Optional[np.ndarray]]:
     """Predict using MLP model."""
+
     if model is None or device is None:
         return None, None
-    X = transform(vectorizer, [text])
-    X_t = torch.tensor(X, dtype=torch.float32, device=device)
+
+    review_vector = transform(vectorizer, [text])
+    review_vector_t = torch.tensor(review_vector, dtype=torch.float32, device=device)
+
     with torch.no_grad():
-        logits = model(X_t)
+        logits = model(review_vector_t)
         probabilities = torch.softmax(logits, dim=1).cpu().numpy()[0]
-        prediction = int(np.argmax(probabilities))
-    return prediction, probabilities
+        prediction = np.argmax(probabilities)
+
+    return int(prediction), probabilities
 
 
 def get_label_name(label: int) -> str:
@@ -139,10 +147,14 @@ def main() -> None:
         '<h1 class="main-header">Hotel Review Classifier</h1>',
         unsafe_allow_html=True,
     )
+
     st.markdown("---")
+
     with st.spinner("Loading models..."):
         vectorizer, baseline_model, mlp_model, mlp_device = load_models()
+
     col1, col2 = st.columns([2, 1])
+
     with col1:
         st.header("Enter Hotel Review")
         review_text = st.text_area(
@@ -195,7 +207,9 @@ def main() -> None:
                 mlp_pred, mlp_probs = predict_mlp(
                     vectorizer, mlp_model, mlp_device, review_text
                 )
+
                 st.markdown("---")
+
                 if baseline_pred is not None and baseline_probs is not None:
                     st.subheader("Baseline Model (Logistic Regression)")
                     label_name = get_label_name(baseline_pred)
@@ -210,6 +224,7 @@ def main() -> None:
                         f"</div>",
                         unsafe_allow_html=True,
                     )
+
                 if mlp_pred is not None and mlp_probs is not None:
                     st.subheader("MLP Model (Neural Network)")
                     label_name = get_label_name(mlp_pred)
@@ -222,6 +237,7 @@ def main() -> None:
                         f"</div>",
                         unsafe_allow_html=True,
                     )
+
                 if baseline_pred is not None and mlp_pred is not None:
                     st.markdown("---")
                     if baseline_pred == mlp_pred:
