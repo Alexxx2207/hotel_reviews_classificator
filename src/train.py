@@ -4,6 +4,8 @@ Trains the models and saves the results.
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import torch
@@ -51,7 +53,7 @@ def train_mlp_only_train(
     label_training: np.ndarray,
     in_features: int,
     paths: Paths | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Trains the MLP model only on the training data."""
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -67,7 +69,7 @@ def train_mlp_only_train(
     )
     loss_fn = torch.nn.CrossEntropyLoss()
 
-    history: list[dict] = []
+    history: list[dict[str, Any]] = []
 
     for epoch in range(1, EPOCHS + 1):
         model.train()
@@ -91,6 +93,7 @@ def train_mlp_only_train(
         model.eval()
         with torch.no_grad():
             predictions: list[np.ndarray] = []
+
             for reviews_batched, labels_batched in iter_minibatches(
                 reviews_training, label_training, BATCH_SIZE, shuffle=False
             ):
@@ -101,6 +104,7 @@ def train_mlp_only_train(
                 )
                 logits = model(reviews_batched_t)
                 predictions.append(torch.argmax(logits, dim=1).cpu().numpy())
+
             label_prediction = np.concatenate(predictions)
 
         train_f1 = f1_score(label_training, label_prediction, average="macro")
@@ -143,5 +147,5 @@ def main(paths: Paths | None = None) -> None:
     pd.DataFrame(history).to_csv(p.metrics / "mlp_history.csv", index=False)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

@@ -30,11 +30,11 @@ def test_iter_minibatches_yields_batches() -> None:
 
 def test_iter_minibatches_empty_batch_size_larger_than_data() -> None:
     """When batch_size > n, we get one batch with all samples."""
-    
+
     X = np.ones((3, 2))
     y = np.array([0, 1, 0])
     batches = list(iter_minibatches(X, y, batch_size=10, shuffle=False))
-    
+
     assert len(batches) == 1
     assert batches[0][0].shape == (3, 2)
     assert batches[0][1].shape == (3,)

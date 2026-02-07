@@ -4,6 +4,8 @@ Features' processing functions.
 
 from __future__ import annotations
 
+from typing import cast
+
 import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -12,7 +14,7 @@ from src.constants import PATHS, TFIDF_MAX_FEATURES, TFIDF_NGRAM_RANGE, Paths
 
 
 def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
-    """Fits a TF-IDF vectorizer to the reviews and returns dense feature matrix."""
+    """Fits a TF-IDF vectorizer to the reviews and returns the vectorizer and feature matrix."""
 
     vectorizer = TfidfVectorizer(
         max_features=TFIDF_MAX_FEATURES,
@@ -20,7 +22,10 @@ def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
         lowercase=True,
         strip_accents=None,
     )
-    feature_matrix = vectorizer.fit_transform(reviews).toarray()  # type: ignore[union-attr]
+    feature_matrix = cast(
+        np.ndarray,
+        vectorizer.fit_transform(reviews).toarray(),  # pyright: ignore[reportAttributeAccessIssue]
+    )
     return vectorizer, feature_matrix
 
 
@@ -29,7 +34,10 @@ def transform(
 ) -> np.ndarray:
     """Transforms the reviews using the given vectorizer; returns dense matrix."""
 
-    return vectorizer.transform(reviews).toarray()  # type: ignore[union-attr]
+    return cast(
+        np.ndarray,
+        vectorizer.transform(reviews).toarray(),  # pyright: ignore[reportAttributeAccessIssue]
+    )
 
 
 def save_vectorizer(

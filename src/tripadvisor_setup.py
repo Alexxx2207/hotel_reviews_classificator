@@ -31,10 +31,7 @@ def load_dataset_from_csv() -> pd.DataFrame:
 
     df = pd.read_csv(Path(dataset_dir) / DATASET_FILE_NAME)
 
-    df = cast(
-        pd.DataFrame,
-        df[[TEXT_COL, RATING_COL]].dropna(),
-    )
+    df = df[[TEXT_COL, RATING_COL]].dropna()
 
     df[TEXT_COL] = df[TEXT_COL].astype(str)
     df[RATING_COL] = df[RATING_COL].astype(int)
@@ -45,19 +42,13 @@ def load_dataset_from_csv() -> pd.DataFrame:
 def to_binary_labels(df: pd.DataFrame) -> pd.DataFrame:
     """Replace ratings with binary labels (0=negative, 1=positive)."""
 
-    df = cast(
-        pd.DataFrame,
-        df[df[RATING_COL].isin(NEG_RATINGS + POS_RATINGS)].copy(),
-    )
+    df = df[df[RATING_COL].isin(NEG_RATINGS + POS_RATINGS)].copy()
 
     df["label"] = df[RATING_COL].apply(
         lambda r: 0 if r in NEG_RATINGS else 1
     )
 
-    return cast(
-        pd.DataFrame,
-        df[[TEXT_COL, "label"]],
-    )
+    return df[[TEXT_COL, "label"]]
 
 
 def split_train_test(

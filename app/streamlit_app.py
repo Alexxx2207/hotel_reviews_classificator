@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import streamlit as st
@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.baseline import load_baseline
 from src.constants import MLP_HIDDEN, PATHS
 from src.features import load_vectorizer, transform
+from src.hf_model import load_hf_model, predict_hf
 from src.mlp import MLP
 
 st.set_page_config(
@@ -54,6 +55,9 @@ def load_models() -> tuple[
     TfidfVectorizer,
     Optional[LogisticRegression],
     Optional[MLP],
+    Optional[torch.device],
+    Optional[Any],
+    Optional[Any],
     Optional[torch.device],
 ]:
     """Load ML models and vectorizer with caching."""
@@ -95,7 +99,27 @@ def load_models() -> tuple[
             "MLP model checkpoint not found. "
             "Only baseline predictions will be available."
         )
-    return vectorizer, baseline_model, mlp_model, mlp_device
+
+    hf_model: Optional[Any] = None
+    hf_tokenizer: Optional[Any] = None
+    hf_device: Optional[torch.device] = None
+    try:
+        hf_model, hf_tokenizer, hf_device = load_hf_model()
+    except Exception as e:
+        st.warning(
+            f"Hugging Face model (DistilBERT) not loaded: {e}. "
+            "Check your internet connection or try again later."
+        )
+
+    return (
+        vectorizer,
+        baseline_model,
+        mlp_model,
+        mlp_device,
+        hf_model,
+        hf_tokenizer,
+        hf_device,
+    )
 
 
 def predict_baseline(
@@ -151,7 +175,15 @@ def main() -> None:
     st.markdown("---")
 
     with st.spinner("Loading models..."):
-        vectorizer, baseline_model, mlp_model, mlp_device = load_models()
+        (
+            vectorizer,
+            baseline_model,
+            mlp_model,
+            mlp_device,
+            hf_model,
+            hf_tokenizer,
+            hf_device,
+        ) = load_models()
 
     col1, col2 = st.columns([2, 1])
 
@@ -207,6 +239,14 @@ def main() -> None:
                 mlp_pred, mlp_probs = predict_mlp(
                     vectorizer, mlp_model, mlp_device, review_text
                 )
+                hf_pred: Optional[int] = None
+                hf_probs: Optional[np.ndarray] = None
+                if hf_model is not None and hf_tokenizer is not None and hf_device is not None:
+                    predictions, probs = predict_hf(
+                        hf_model, hf_tokenizer, hf_device, [review_text]
+                    )
+                    hf_pred = int(predictions[0])
+                    hf_probs = probs[0]
 
                 st.markdown("---")
 
@@ -238,19 +278,18 @@ def main() -> None:
                         unsafe_allow_html=True,
                     )
 
-                if baseline_pred is not None and mlp_pred is not None:
-                    st.markdown("---")
-                    if baseline_pred == mlp_pred:
-                        st.success(
-                            f"Both models agree: "
-                            f"**{get_label_name(baseline_pred)}** review"
-                        )
-                    else:
-                        st.warning(
-                            f"Models disagree: Baseline predicts "
-                            f"**{get_label_name(baseline_pred)}**, "
-                            f"MLP predicts **{get_label_name(mlp_pred)}**"
-                        )
+                if hf_pred is not None and hf_probs is not None:
+                    st.subheader("Hugging Face Model (DistilBERT)")
+                    label_name = get_label_name(hf_pred)
+                    confidence = float(hf_probs[hf_pred]) * 100
+                    css_class = "positive" if hf_pred == 1 else "negative"
+                    st.markdown(
+                        f'<div class="prediction-box {css_class}">'
+                        f"<h3>{label_name} Review</h3>"
+                        f"<p><strong>Confidence:</strong> {confidence:.2f}%</p>"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
 
 
 if __name__ == "__main__":

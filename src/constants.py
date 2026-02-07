@@ -27,6 +27,9 @@ BATCH_SIZE = 256
 LR = 1e-3
 WEIGHT_DECAY = 1e-4
 
+# Pre-trained Hugging Face model for hotel review sentiment (positive/negative)
+HF_MODEL_NAME = "kmack/HotelReviewClassifier"
+
 @dataclass(frozen=True)
 class Paths:
     """Paths to the important directories for the project."""

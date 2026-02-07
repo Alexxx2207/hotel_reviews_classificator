@@ -17,6 +17,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from src.baseline import load_baseline
 from src.constants import BATCH_SIZE, MLP_HIDDEN, PATHS, TEXT_COL, Paths
 from src.features import load_vectorizer, transform
+from src.hf_model import load_hf_model, predict_hf
 from src.mlp import (MLP, iter_minibatches)
 
 
@@ -96,6 +97,26 @@ def eval_baseline(
     )
     cm = confusion_matrix(expected_labels, predicted_labels)
 
+    return report, cm
+
+
+def eval_hf(
+    reviews_test_txt: list[str],
+    expected_labels: np.ndarray
+) -> tuple[ReportType, np.ndarray]:
+    """Evaluates the Hugging Face model on texts."""
+
+    model, tokenizer, device = load_hf_model()
+
+    predicted_labels, _ = predict_hf(
+        model, tokenizer, device, reviews_test_txt
+    )
+
+    report = classification_report(
+        expected_labels, predicted_labels, output_dict=True
+    )
+    cm = confusion_matrix(expected_labels, predicted_labels)
+    
     return report, cm
 
 
@@ -181,6 +202,17 @@ def main(paths: Paths | None = None) -> None:
         m_cm,
         "MLP Confusion Matrix (Test)",
         p.plots / "mlp_cm.png",
+    )
+
+    hf_report, hf_cm = eval_hf(reviews_test_txt, expected_labels)
+
+    with open(p.metrics / "hf_test_report.json", "w", encoding="utf-8") as f:
+        json.dump(hf_report, f, ensure_ascii=False, indent=2)
+
+    save_confusion_matrix(
+        hf_cm,
+        "Hugging Face Confusion Matrix (Test)",
+        p.plots / "hf_cm.png",
     )
 
     plot_history(p)

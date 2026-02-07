@@ -5,6 +5,7 @@ Multilayer Perceptron model for the project.
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import cast
 
 import numpy as np
 
@@ -32,7 +33,10 @@ class MLP(torch.nn.Module):
 
         hidden_activation = torch.nn.functional.relu(self.hidden_layer(input_batch))
 
-        return self.output_layer(self.dropout(hidden_activation))
+        return cast(
+            torch.Tensor,
+            self.output_layer(self.dropout(hidden_activation)),
+        )
 
 
 def iter_minibatches(
