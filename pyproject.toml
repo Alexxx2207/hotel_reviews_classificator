@@ -27,7 +27,6 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-# Prefer PyTorch CUDA wheels (cu130) over default PyPI CPU build
 torch = { index = "pytorch-cu130" }
 
 [[tool.uv.index]]
