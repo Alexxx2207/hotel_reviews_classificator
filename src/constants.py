@@ -12,7 +12,7 @@ DATASET_FILE_NAME = "tripadvisor_hotel_reviews.csv"
 TEXT_COL = "Review"
 RATING_COL = "Rating"
 
-RANDOM_STATE = 42
+RANDOM_STATE = 100
 TEST_SIZE = 0.2
 
 NEG_RATINGS = {1, 2}
@@ -36,18 +36,22 @@ class Paths:
 
     @property
     def data_processed(self) -> Path:
+        """Returns the path to the processed data."""
         return self.project_root / "data"
 
     @property
     def artifacts(self) -> Path:
+        """Returns the path to the artifacts."""
         return self.project_root / "artifacts"
 
     @property
     def metrics(self) -> Path:
+        """Returns the path to the metrics."""
         return self.artifacts / "metrics"
 
     @property
     def plots(self) -> Path:
+        """Returns the path to the plots."""
         return self.artifacts / "plots"
 
 

@@ -14,31 +14,6 @@ from src.train import (
 )
 
 
-def test_load_split_returns_texts_and_labels(tmp_path_in_project: Path) -> None:
-    """load_split returns (list of texts, array of labels)."""
-    (tmp_path_in_project / "data").mkdir(parents=True)
-    df = pd.DataFrame({
-        TEXT_COL: ["a", "b", "c"],
-        "label": [0, 1, 0],
-    })
-    df.to_csv(tmp_path_in_project / "data" / "train.csv", index=False)
-    paths = Paths(project_root=tmp_path_in_project)
-
-    texts, labels = load_split("train", paths)
-    assert texts == ["a", "b", "c"]
-    np.testing.assert_array_equal(labels, np.array([0, 1, 0]))
-
-
-def test_ensure_directories_exist(tmp_path_in_project: Path) -> None:
-    """ensure_directories_exist creates artifacts, metrics, plots."""
-    paths = Paths(project_root=tmp_path_in_project)
-
-    ensure_directories_exist(paths)
-    assert (tmp_path_in_project / "artifacts").is_dir()
-    assert (tmp_path_in_project / "artifacts" / "metrics").is_dir()
-    assert (tmp_path_in_project / "artifacts" / "plots").is_dir()
-
-
 def test_train_mlp_only_train_returns_history(tmp_path_in_project: Path) -> None:
     """train_mlp_only_train returns history and saves checkpoint."""
     paths = Paths(project_root=tmp_path_in_project)

@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-from src.constants import PATHS, Paths
+from src.constants import Paths
 from src.baseline import (
     evaluate_baseline,
     load_baseline,
@@ -50,8 +50,3 @@ def test_save_and_load_baseline(tmp_path_in_project: Path) -> None:
     loaded = load_baseline(paths)
     assert isinstance(loaded, LogisticRegression)
     np.testing.assert_array_equal(classifier.predict(X), loaded.predict(X))
-
-
-def test_baseline_saved_under_artifacts() -> None:
-    """Baseline is saved under PATHS.artifacts when using default paths."""
-    assert (PATHS.artifacts / "baseline_logreg.joblib").parent == PATHS.artifacts

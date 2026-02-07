@@ -9,10 +9,9 @@ from collections.abc import Generator
 import numpy as np
 
 import torch
-from torch import nn
 
 
-class MLP(nn.Module):
+class MLP(torch.nn.Module):
     """Single hidden-layer MLP: dense TF-IDF -> Linear -> ReLU -> Dropout -> Linear."""
 
     def __init__(
@@ -25,13 +24,13 @@ class MLP(nn.Module):
         """Initializes the MLP."""
 
         super().__init__()
-        self.hidden_layer = nn.Linear(in_features, hidden)
-        self.output_layer = nn.Linear(hidden, num_classes)
-        self.dropout = nn.Dropout(dropout)
+        self.hidden_layer = torch.nn.Linear(in_features, hidden)
+        self.output_layer = torch.nn.Linear(hidden, num_classes)
+        self.dropout = torch.nn.Dropout(dropout)
 
-    def forward(self, input_batch: nn.Tensor) -> nn.Tensor:
+    def forward(self, input_batch: torch.Tensor) -> torch.Tensor:
         """Forward pass of the MLP."""
-        hidden_activation = nn.functional.relu(self.hidden_layer(input_batch))
+        hidden_activation = torch.nn.functional.relu(self.hidden_layer(input_batch))
         hidden_dropped = self.dropout(hidden_activation)
         logits = self.output_layer(hidden_dropped)
         return logits

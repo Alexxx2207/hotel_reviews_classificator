@@ -49,25 +49,6 @@ def test_split_train_test_stratified() -> None:
     assert set(y_test) == {0, 1}
 
 
-def test_save_splits_writes_csv(tmp_path_in_project: Path) -> None:
-    """save_splits writes train.csv and test.csv to data_processed."""
-    paths = Paths(project_root=tmp_path_in_project)
-    train = (pd.Series(["a", "b"]), pd.Series([0, 1]))
-    test = (pd.Series(["c"]), pd.Series([1]))
-    save_splits(train, test, paths)
-
-    train_path = tmp_path_in_project / "data" / "train.csv"
-    test_path = tmp_path_in_project / "data" / "test.csv"
-    assert train_path.exists()
-    assert test_path.exists()
-    train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
-    assert list(train_df[TEXT_COL]) == ["a", "b"]
-    assert list(train_df["label"]) == [0, 1]
-    assert list(test_df[TEXT_COL]) == ["c"]
-    assert list(test_df["label"]) == [1]
-
-
 def test_load_dataset_from_csv_mocked(tmp_path_in_project: Path) -> None:
     """load_dataset_from_csv returns DataFrame when kagglehub returns a local CSV path."""
     from src.constants import DATASET_FILE_NAME

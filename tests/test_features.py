@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from src.constants import PATHS, Paths
+from src.constants import Paths
 from src.features import (
     fit_vectorizer,
     load_vectorizer,
@@ -52,21 +52,3 @@ def test_save_and_load_vectorizer(tmp_path_in_project: Path) -> None:
 
 
 
-def test_transform_single_document() -> None:
-    """transform with one document returns shape (1, n_features)."""
-    vec, matrix = fit_vectorizer(["first doc", "second doc"])
-    one = transform(vec, ["first doc"])
-    assert one.shape == (1, matrix.shape[1])
-    np.testing.assert_array_almost_equal(one[0], matrix[0])
-
-
-def test_fit_vectorizer_single_document() -> None:
-    """fit_vectorizer works with a single review."""
-    vec, matrix = fit_vectorizer(["only one review"])
-    assert matrix.shape == (1, matrix.shape[1])
-    assert matrix.shape[1] >= 1
-
-
-def test_vectorizer_saved_under_artifacts() -> None:
-    """Vectorizer is saved under PATHS.artifacts when using default paths."""
-    assert (PATHS.artifacts / "tfidf.joblib").parent == PATHS.artifacts

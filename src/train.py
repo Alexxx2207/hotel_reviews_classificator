@@ -86,7 +86,11 @@ def train_mlp_only_train(
             for reviews_batched, labels_batched in iter_minibatches(
                 x_train, y_train, BATCH_SIZE, shuffle=False
             ):
-                reviews_batched_t = torch.tensor(reviews_batched, dtype=torch.float32, device=device)
+                reviews_batched_t = torch.tensor(
+                    reviews_batched,
+                    dtype=torch.float32,
+                    device=device,
+                )
                 logits = model(reviews_batched_t)
                 pred = (
                     torch.argmax(logits, dim=1).detach().cpu().numpy()
