@@ -20,7 +20,7 @@ For streamlit app demo:
 
 1. `uv run python -m src.tripadvisor_setup`
 2. `uv run python -m src.train`
-3. `uv run python -m streamlit run ./app/streamlit_app.py`
+3. `uv run streamlit run ./app/streamlit_app.py`
 
 For evaluation:
 
