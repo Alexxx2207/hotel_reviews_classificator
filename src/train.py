@@ -60,9 +60,7 @@ def train_mlp_only_train(
         dropout=MLP_DROPOUT,
     ).to(device)
 
-    opt = torch.optim.Adam(
-        model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY
-    )
+    opt = torch.optim.Adam( model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
     loss_fn = torch.nn.CrossEntropyLoss()
 
     history: list[dict[str, Any]] = []

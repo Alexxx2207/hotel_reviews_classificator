@@ -26,12 +26,11 @@ def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
         np.ndarray,
         vectorizer.fit_transform(reviews).toarray(),  # pyright: ignore[reportAttributeAccessIssue]
     )
+
     return vectorizer, feature_matrix
 
 
-def transform(
-    vectorizer: TfidfVectorizer, reviews: list[str]
-) -> np.ndarray:
+def transform(vectorizer: TfidfVectorizer, reviews: list[str]) -> np.ndarray:
     """Transforms the reviews using the given vectorizer; returns dense matrix."""
 
     return cast(
@@ -40,13 +39,11 @@ def transform(
     )
 
 
-def save_vectorizer(
-    vectorizer: TfidfVectorizer,
-    paths: Paths = PATHS,
-) -> None:
+def save_vectorizer(vectorizer: TfidfVectorizer, paths: Paths = PATHS) -> None:
     """Saves a TF-IDF vectorizer to the artifacts directory."""
 
     paths.artifacts.mkdir(parents=True, exist_ok=True)
+
     joblib.dump(vectorizer, paths.artifacts / "tfidf.joblib")
 
 

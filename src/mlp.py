@@ -15,12 +15,7 @@ import torch
 class MLP(torch.nn.Module):
     """One hidden-layer MLP: TF-IDF -> Hidden matrix -> ReLU -> Dropout -> Output matrix."""
 
-    def __init__(
-        self,
-        in_features: int,
-        hidden: int,
-        dropout: float
-    ) -> None:
+    def __init__(self, in_features: int, hidden: int, dropout: float) -> None:
         """Initializes the MLP."""
 
         super().__init__()

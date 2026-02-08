@@ -16,6 +16,7 @@ def train_baseline(x_train: np.ndarray, y_train: np.ndarray) -> LogisticRegressi
 
     classifier = LogisticRegression(max_iter=2000, n_jobs=None)
     classifier.fit(x_train, y_train)
+
     return classifier
 
 

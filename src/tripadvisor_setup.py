@@ -74,33 +74,29 @@ def split_train_test(
 def save_splits(
     train: tuple[pd.Series, pd.Series],
     test: tuple[pd.Series, pd.Series],
-    paths: Paths | None = None,
+    paths: Paths = PATHS,
 ) -> None:
     """Save train and test splits to CSV in the processed data directory."""
-
-    p = paths or PATHS
 
     (reviews_train, label_train) = train
     (reviews_test, label_test) = test
 
-    p.data_processed.mkdir(parents=True, exist_ok=True)
+    paths.data_processed.mkdir(parents=True, exist_ok=True)
 
     pd.DataFrame({TEXT_COL: reviews_train, "label": label_train}).to_csv(
-        p.data_processed / "train.csv", index=False
+        paths.data_processed / "train.csv", index=False
     )
     pd.DataFrame({TEXT_COL: reviews_test, "label": label_test}).to_csv(
-        p.data_processed / "test.csv", index=False
+        paths.data_processed / "test.csv", index=False
     )
 
 
-def main(paths: Paths | None = None) -> None:
+def main(paths: Paths = PATHS) -> None:
     """Main function to run the setup."""
-
-    p = paths or PATHS
 
     train, test = split_train_test(to_binary_labels(load_dataset_from_csv()))
 
-    save_splits(train, test, p)
+    save_splits(train, test, paths)
 
 
 if __name__ == "__main__":

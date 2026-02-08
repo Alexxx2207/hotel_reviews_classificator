@@ -47,10 +47,7 @@ def plot_history(paths: Paths = PATHS) -> None:
     plt.xlabel("Epoch")
     plt.ylabel("Train loss")
     plt.title("MLP Train Loss")
-    plt.savefig(
-        paths.plots / "mlp_train_loss.png",
-        bbox_inches="tight",
-    )
+    plt.savefig(paths.plots / "mlp_train_loss.png", bbox_inches="tight")
     plt.close()
 
     plt.figure()
@@ -58,10 +55,7 @@ def plot_history(paths: Paths = PATHS) -> None:
     plt.xlabel("Epoch")
     plt.ylabel("Train macro F1")
     plt.title("MLP Train Macro-F1")
-    plt.savefig(
-        paths.plots / "mlp_train_macro_f1.png",
-        bbox_inches="tight",
-    )
+    plt.savefig(paths.plots / "mlp_train_macro_f1.png", bbox_inches="tight")
     plt.close()
 
 
@@ -122,11 +116,7 @@ def load_mlp_checkpoint(path: Path) -> tuple[MLP, torch.device]:
     checkpoint = torch.load(path, map_location=device)
     in_features = checkpoint["in_features"]
 
-    model = MLP(
-        in_features=in_features,
-        hidden=MLP_HIDDEN,
-        dropout=0.0,
-    ).to(device)
+    model = MLP(in_features=in_features,hidden=MLP_HIDDEN,dropout=0.0,).to(device)
 
     model.load_state_dict(checkpoint["model_state"])
     model.eval()
