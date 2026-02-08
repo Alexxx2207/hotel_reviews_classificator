@@ -189,18 +189,22 @@ def main() -> None:
 
     with col1:
         st.header("Enter Hotel Review")
+
         review_text = st.text_area(
             "Review Text",
             height=200,
             placeholder=(
                 "Enter your hotel review here...\n\n"
                 "Example: 'The hotel was amazing! Great service, "
-                "clean rooms, and excellent location. Highly recommend!'"
+                "clean rooms and good location. Highly recommend it!'"
             ),
             help="Type or paste a hotel review to classify it as positive or negative.",
         )
+
         st.subheader("Try Example Reviews")
+
         example_col1, example_col2 = st.columns(2)
+
         with example_col1:
             if st.button("Example Positive Review"):
                 st.session_state.example_review = (
@@ -219,6 +223,7 @@ def main() -> None:
                     "The WiFi didn't work, and the noise from the street "
                     "kept me awake all night. Would not recommend this hotel."
                 )
+
         if "example_review" in st.session_state:
             review_text = st.text_area(
                 "Review Text",
@@ -229,6 +234,7 @@ def main() -> None:
 
     with col2:
         st.header("Classification")
+
         if st.button("Classify Review", type="primary", use_container_width=True):
             if not review_text.strip():
                 st.warning("Please enter a review text before classifying.")
@@ -239,8 +245,10 @@ def main() -> None:
                 mlp_pred, mlp_probs = predict_mlp(
                     vectorizer, mlp_model, mlp_device, review_text
                 )
+
                 hf_pred: Optional[int] = None
                 hf_probs: Optional[np.ndarray] = None
+                
                 if hf_model is not None and hf_tokenizer is not None and hf_device is not None:
                     predictions, probs = predict_hf(
                         hf_model, hf_tokenizer, hf_device, [review_text]

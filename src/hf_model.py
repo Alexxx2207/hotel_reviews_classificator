@@ -53,8 +53,8 @@ def predict_hf(
             outputs = model(**inputs)
 
         logits = outputs.logits.cpu()
-        probabilities = torch.softmax(logits, dim=-1).numpy()
-        predictions = np.argmax(probabilities, axis=-1)
+        probabilities = torch.softmax(logits, dim=1).numpy()
+        predictions = np.argmax(probabilities, axis=1)
 
         all_predictions.extend(predictions.tolist())
         all_probabilities.append(probabilities)
