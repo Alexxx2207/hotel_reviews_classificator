@@ -250,12 +250,14 @@ def main() -> None:
                 hf_pred: Optional[int] = None
                 hf_probs: Optional[np.ndarray] = None
                 
+                # Comment this block if streamlit crashed after button click
                 if hf_model is not None and hf_tokenizer is not None and hf_device is not None:
                     predictions, probs = predict_hf(
                         hf_model, hf_tokenizer, hf_device, [review_text]
                     )
                     hf_pred = int(predictions[0])
                     hf_probs = probs[0]
+                # Comment this block if streamlit crashed after button click
 
                 st.markdown("---")
 
