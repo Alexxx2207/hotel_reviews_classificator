@@ -1,14 +1,15 @@
 # Introduction (Short)
 
-The project classifies hotel review by whether they are positive or negative. It uses multilayer perception model and logistic regression baseline. The vectorizer is TfIdf with 1 or 2 ngrams.
+This is a hotel reviews classifier project that determines whether a review is positive or negative. It uses multilayer perception model, logistic regression baseline and a ready-to-use model from Hugging Face(kmack/HotelReviewClassifier). The vectorizer for the baseline and MLP is TfIdf with 1 or 2 ngrams.
 
 Some features are:
 
-- Downloading dataset from Kaggle
-- Training MLP and Baseline models
+- dataset from Kaggle with its manipulation and vectorization
+- MLP and baseline models training
+- pre-trained model usage
 - streamlit project for testing the MLP and the baseline with your custom reviews
 - plots for the mlp loss and f1 score in terms of the epochs
-- confusion matrix plots for MLP and baseline
+- confusion matrices plots for MLP and baseline
 - MLP, baseline and Hugging Face model test reports in JSON for perception, recall, F1 and support for each class and with accuracy, macro and weighted average.
 
 # How to start it
@@ -51,4 +52,4 @@ The code is in the src folder. There are top level modules:
 
 ## Tests
 
-Pytest testing framework is used. A custom .tmp folder is created for saving the artifacts that are being expected. It has 98% coverage, but at the expense of some meaningless tests like constants checks.
+Pytest testing framework is used. A custom .tmp folder is created for saving the artifacts that are being expected.
