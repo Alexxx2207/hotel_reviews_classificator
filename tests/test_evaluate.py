@@ -31,6 +31,7 @@ def test_plot_history_creates_plots(tmp_path_in_project: Path) -> None:
     paths = Paths(project_root=tmp_path_in_project)
     paths.metrics.mkdir(parents=True, exist_ok=True)
     paths.plots.mkdir(parents=True, exist_ok=True)
+
     pd.DataFrame({
         "epoch": [1, 2],
         "train_loss": [0.5, 0.3],
@@ -44,7 +45,7 @@ def test_plot_history_creates_plots(tmp_path_in_project: Path) -> None:
 
 
 def test_evaluate_main(tmp_path_in_project: Path) -> None:
-    """main() runs full evaluation and writes reports and plots."""
+    """main() runs full evaluation and makes reports and confusion matrices."""
 
     paths = Paths(project_root=tmp_path_in_project)
     paths.data_processed.mkdir(parents=True, exist_ok=True)
@@ -60,15 +61,15 @@ def test_evaluate_main(tmp_path_in_project: Path) -> None:
     texts = ["great stay"] * 5 + ["awful"] * 5
     labels = np.array([1] * 5 + [0] * 5)
     
-    vec, X = fit_vectorizer(texts)
+    vec, feature_matrix = fit_vectorizer(texts)
     save_vectorizer(vec, paths)
 
-    clf = train_baseline(X, labels)
-    save_baseline(clf, paths)
+    classifier = train_baseline(feature_matrix, labels)
+    save_baseline(classifier, paths)
 
-    model = MLP(in_features=X.shape[1], hidden=MLP_HIDDEN, dropout=0.0)
+    model = MLP(in_features=feature_matrix.shape[1], hidden=MLP_HIDDEN, dropout=0.0)
     torch.save(
-        {"model_state": model.state_dict(), "in_features": X.shape[1]},
+        {"model_state": model.state_dict(), "in_features": feature_matrix.shape[1]},
         paths.artifacts / "mlp_last.pt",
     )
 

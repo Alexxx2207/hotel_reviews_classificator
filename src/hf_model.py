@@ -14,9 +14,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from src.constants import BATCH_SIZE, HF_MODEL_NAME
 
 
-def load_hf_model(
-    model_name: str = HF_MODEL_NAME,
-):
+def load_hf_model(model_name: str = HF_MODEL_NAME) -> tuple[Any, Any, torch.device]:
     """Load the Hugging Face model and tokenizer from the Hub."""
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

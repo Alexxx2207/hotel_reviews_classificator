@@ -38,21 +38,25 @@ class Paths:
     @property
     def data_processed(self) -> Path:
         """Returns the path to the processed data."""
+
         return self.project_root / "data"
 
     @property
     def artifacts(self) -> Path:
         """Returns the path to the artifacts."""
+
         return self.project_root / "artifacts"
 
     @property
     def metrics(self) -> Path:
         """Returns the path to the metrics."""
+
         return self.artifacts / "metrics"
 
     @property
     def plots(self) -> Path:
         """Returns the path to the plots."""
+
         return self.artifacts / "plots"
 
 

@@ -35,12 +35,12 @@ def load_split(name: str, paths: Paths = PATHS) -> tuple[list[str], np.ndarray]:
 def plot_history(paths: Paths = PATHS) -> None:
     """Plots the training history(loss and F1) of the MLP model."""
 
-    hist_path = paths.metrics / "mlp_history.csv"
+    history_path = paths.metrics / "mlp_history.csv"
 
-    if not hist_path.exists():
+    if not history_path.exists():
         return
 
-    df = pd.read_csv(hist_path)
+    df = pd.read_csv(history_path)
 
     plt.figure()
     plt.plot(df["epoch"], df["train_loss"])
@@ -65,9 +65,7 @@ def plot_history(paths: Paths = PATHS) -> None:
     plt.close()
 
 
-def save_confusion_matrix(
-    cm: np.ndarray, title: str, out_path: Path
-) -> None:
+def save_confusion_matrix(cm: np.ndarray, title: str, out_path: Path) -> None:
     """Saves a confusion matrix to the given path."""
 
     plt.figure()

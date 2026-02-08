@@ -11,9 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from src.constants import PATHS, Paths
 
 
-def train_baseline(
-    x_train: np.ndarray, y_train: np.ndarray
-) -> LogisticRegression:
+def train_baseline(x_train: np.ndarray, y_train: np.ndarray) -> LogisticRegression:
     """Trains a baseline logistic regression classifier."""
 
     classifier = LogisticRegression(max_iter=2000, n_jobs=None)
@@ -21,10 +19,7 @@ def train_baseline(
     return classifier
 
 
-def save_baseline(
-    classifier: LogisticRegression,
-    paths: Paths = PATHS,
-) -> None:
+def save_baseline(classifier: LogisticRegression, paths: Paths = PATHS) -> None:
     """Saves a baseline logistic regression classifier in the artifacts directory."""
 
     paths.artifacts.mkdir(parents=True, exist_ok=True)

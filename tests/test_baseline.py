@@ -13,13 +13,13 @@ def test_train_baseline_returns_classifier() -> None:
     """train_baseline returns a fitted LogisticRegression."""
 
     rng = np.random.default_rng(100)
-    X = rng.random((20, 10))
-    y = (rng.random(20) > 0.5).astype(int)
+    reviews_train = rng.random((20, 10))
+    labels_train = (rng.random(20) > 0.5).astype(int)
     
-    classifier = train_baseline(X, y)
+    classifier = train_baseline(reviews_train, labels_train)
 
     assert isinstance(classifier, LogisticRegression)
-    assert classifier.predict(X[:3]).shape == (3,)
+    assert classifier.predict(reviews_train[:3]).shape == (3,)
 
 
 def test_save_and_load_baseline(tmp_path_in_project: Path) -> None:
@@ -29,9 +29,10 @@ def test_save_and_load_baseline(tmp_path_in_project: Path) -> None:
     paths.artifacts.mkdir(parents=True, exist_ok=True)
 
     rng = np.random.default_rng(100)
-    X = rng.random((30, 5))
-    y = (rng.random(30) > 0.5).astype(int)
-    classifier = train_baseline(X, y)
+    reviews_train = rng.random((30, 5))
+    labels_train = (rng.random(30) > 0.5).astype(int)
+    
+    classifier = train_baseline(reviews_train, labels_train)
     save_baseline(classifier, paths)
 
     assert (tmp_path_in_project / "artifacts" / "baseline_logreg.joblib").exists()
@@ -40,4 +41,5 @@ def test_save_and_load_baseline(tmp_path_in_project: Path) -> None:
 
     assert isinstance(loaded, LogisticRegression)
 
-    np.testing.assert_array_equal(classifier.predict(X), loaded.predict(X))
+    # Hands down най-добрата библиотека ^^
+    np.testing.assert_array_equal(classifier.predict(reviews_train), loaded.predict(reviews_train))

@@ -7,18 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from src.constants import Paths
-
-
-TESTS_TMP_ROOT = Path(__file__).resolve().parent / ".tmp"
-
 
 @pytest.fixture
 def tmp_path_in_project() -> Generator[Path, None, None]:
     """A writable directory under tests/.tmp."""
-    
-    TESTS_TMP_ROOT.mkdir(parents=True, exist_ok=True)
-    path = TESTS_TMP_ROOT / str(uuid.uuid4())
+
+    tmp_root = Path(__file__).resolve().parent / ".tmp"
+
+    tmp_root.mkdir(parents=True, exist_ok=True)
+    path = tmp_root / str(uuid.uuid4())
     path.mkdir(parents=True)
 
     yield path

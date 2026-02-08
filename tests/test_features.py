@@ -27,18 +27,17 @@ def test_fit_vectorizer_returns_vectorizer_and_matrix() -> None:
 
 
 def test_transform_uses_fitted_vectorizer() -> None:
-    """transform produces same vocab shape as fit_vectorizer."""
+    """transform produces same vocabulary shape as fit_vectorizer."""
     
-    train = ["good", "bad", "nice"]
-    vec, train_matrix = fit_vectorizer(train)
+    vec, feature_matrix = fit_vectorizer(["good", "bad", "nice"])
     test_matrix = transform(vec, ["good nice"])
 
     assert test_matrix.shape[0] == 1
-    assert test_matrix.shape[1] == train_matrix.shape[1]
+    assert test_matrix.shape[1] == feature_matrix.shape[1]
 
 
 def test_save_and_load_vectorizer(tmp_path_in_project: Path) -> None:
-    """Saving and loading round-trips the vectorizer."""
+    """Saving and loading the vectorizer."""
     
     paths = Paths(project_root=tmp_path_in_project)
     paths.artifacts.mkdir(parents=True, exist_ok=True)
@@ -56,4 +55,5 @@ def test_save_and_load_vectorizer(tmp_path_in_project: Path) -> None:
     matrix_orig = transform(vec, ["one three"])
     matrix_loaded = transform(loaded, ["one three"])
 
+    # Numpy се оказа много мощна библиотека :о
     np.testing.assert_array_almost_equal(matrix_orig, matrix_loaded)

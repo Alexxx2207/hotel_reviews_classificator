@@ -125,9 +125,9 @@ def main(paths: Paths = PATHS) -> None:
 
     ensure_directories_exist(paths)
 
-    x_train_txt, label_training = load_split("train", paths)
+    review_train, label_training = load_split("train", paths)
 
-    vec, reviews_training = fit_vectorizer(x_train_txt)
+    vec, reviews_training = fit_vectorizer(review_train)
     save_vectorizer(vec, paths)
 
     baseline = train_baseline(reviews_training, label_training)

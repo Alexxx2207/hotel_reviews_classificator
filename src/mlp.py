@@ -13,7 +13,7 @@ import torch
 
 
 class MLP(torch.nn.Module):
-    """Single hidden-layer MLP: TF-IDF -> Hidden matrix -> ReLU -> Dropout -> Output matrix."""
+    """One hidden-layer MLP: TF-IDF -> Hidden matrix -> ReLU -> Dropout -> Output matrix."""
 
     def __init__(
         self,

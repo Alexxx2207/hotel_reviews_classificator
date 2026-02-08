@@ -20,11 +20,11 @@ def test_train_mlp_only_train_returns_history(tmp_path_in_project: Path) -> None
 
     rng = np.random.default_rng(100)
     n, in_features = 50, 20
-    x_train = rng.random((n, in_features)).astype(float)
-    y_train = (rng.random(n) > 0.5).astype(int)
+    reviews_train = rng.random((n, in_features)).astype(float)
+    labels_train = (rng.random(n) > 0.5).astype(int)
 
     history = train_mlp_only_train(
-        x_train, y_train, in_features, paths=paths
+        reviews_train, labels_train, in_features, paths=paths
     )
 
     assert isinstance(history, list)
@@ -53,7 +53,7 @@ def test_train_main(tmp_path_in_project: Path) -> None:
     assert (tmp_path_in_project / "artifacts" / "mlp_last.pt").exists()
     assert (tmp_path_in_project / "artifacts" / "metrics" / "mlp_history.csv").exists()
 
-    hist = pd.read_csv(tmp_path_in_project / "artifacts" / "metrics" / "mlp_history.csv")
+    history = pd.read_csv(tmp_path_in_project / "artifacts" / "metrics" / "mlp_history.csv")
 
-    assert list(hist.columns) == ["epoch", "train_loss", "train_macro_f1"]
-    assert len(hist) == EPOCHS
+    assert list(history.columns) == ["epoch", "train_loss", "train_macro_f1"]
+    assert len(history) == EPOCHS
