@@ -15,7 +15,7 @@ Some features are:
 # How to start it
 
 > :warning:
-> To use the hugging face model, it is required to have more than 16GB RAM. Otherwise, the evaluate module or streamlit app will crash.
+> On some machines the evaluate module or streamlit app will crash (due to not enough RAM probably). :(
 
 This guide infers that you are in the root directory of the project(where this README is at).
 
