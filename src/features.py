@@ -42,17 +42,15 @@ def transform(
 
 def save_vectorizer(
     vectorizer: TfidfVectorizer,
-    paths: Paths | None = None,
+    paths: Paths = PATHS,
 ) -> None:
     """Saves a TF-IDF vectorizer to the artifacts directory."""
 
-    p = paths or PATHS
-    p.artifacts.mkdir(parents=True, exist_ok=True)
-    joblib.dump(vectorizer, p.artifacts / "tfidf.joblib")
+    paths.artifacts.mkdir(parents=True, exist_ok=True)
+    joblib.dump(vectorizer, paths.artifacts / "tfidf.joblib")
 
 
-def load_vectorizer(paths: Paths | None = None) -> TfidfVectorizer:
+def load_vectorizer(paths: Paths = PATHS) -> TfidfVectorizer:
     """Loads a TF-IDF vectorizer from the artifacts directory."""
 
-    p = paths or PATHS
-    return joblib.load(p.artifacts / "tfidf.joblib")
+    return joblib.load(paths.artifacts / "tfidf.joblib")

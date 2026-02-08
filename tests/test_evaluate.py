@@ -74,7 +74,7 @@ def test_evaluate_main(tmp_path_in_project: Path) -> None:
 
     evaluate_main(paths)
 
-    assert (paths.metrics / "baseline_test_report.json").exists()
-    assert (paths.metrics / "mlp_test_report.json").exists()
-    assert (paths.plots / "baseline_cm.png").exists()
-    assert (paths.plots / "mlp_cm.png").exists()
+    assert (paths.metrics / "baseline_test.json").exists()
+    assert (paths.metrics / "mlp_test.json").exists()
+    assert (paths.plots / "baseline_test.png").exists()
+    assert (paths.plots / "mlp_test.png").exists()

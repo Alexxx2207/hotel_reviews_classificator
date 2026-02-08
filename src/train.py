@@ -28,31 +28,27 @@ from src.features import fit_vectorizer, save_vectorizer
 from src.mlp import MLP, iter_minibatches
 
 
-def load_split(name: str, paths: Paths | None = None) -> tuple[list[str], np.ndarray]:
+def load_split(name: str, paths: Paths = PATHS) -> tuple[list[str], np.ndarray]:
     """Loads the split data from the given name(train or test)."""
 
-    p = paths or PATHS
-
-    df = pd.read_csv(p.data_processed / f"{name}.csv")
+    df = pd.read_csv(paths.data_processed / f"{name}.csv")
 
     return df[TEXT_COL].tolist(), df["label"].to_numpy(dtype=int)
 
 
-def ensure_directories_exist(paths: Paths | None = None) -> None:
+def ensure_directories_exist(paths: Paths = PATHS) -> None:
     """Ensures the important directories exist."""
 
-    p = paths or PATHS
-
-    p.artifacts.mkdir(parents=True, exist_ok=True)
-    p.metrics.mkdir(parents=True, exist_ok=True)
-    p.plots.mkdir(parents=True, exist_ok=True)
+    paths.artifacts.mkdir(parents=True, exist_ok=True)
+    paths.metrics.mkdir(parents=True, exist_ok=True)
+    paths.plots.mkdir(parents=True, exist_ok=True)
 
 # pylint: disable=too-many-locals
 def train_mlp_only_train(
     reviews_training: np.ndarray,
     label_training: np.ndarray,
     in_features: int,
-    paths: Paths | None = None,
+    paths: Paths = PATHS,
 ) -> list[dict[str, Any]]:
     """Trains the MLP model only on the training data."""
 
@@ -116,35 +112,32 @@ def train_mlp_only_train(
             "train_macro_f1": train_f1,
         })
 
-    p = paths or PATHS
-
     torch.save(
         {"model_state": model.state_dict(), "in_features": in_features},
-        p.artifacts / "mlp_last.pt",
+        paths.artifacts / "mlp_last.pt",
     )
 
     return history
 
 
-def main(paths: Paths | None = None) -> None:
+def main(paths: Paths = PATHS) -> None:
     """Main function to run the training."""
-    p = paths or PATHS
 
-    ensure_directories_exist(p)
+    ensure_directories_exist(paths)
 
-    x_train_txt, label_training = load_split("train", p)
+    x_train_txt, label_training = load_split("train", paths)
 
     vec, reviews_training = fit_vectorizer(x_train_txt)
-    save_vectorizer(vec, p)
+    save_vectorizer(vec, paths)
 
     baseline = train_baseline(reviews_training, label_training)
-    save_baseline(baseline, p)
+    save_baseline(baseline, paths)
 
     history = train_mlp_only_train(
-        reviews_training, label_training, reviews_training.shape[1], paths=p
+        reviews_training, label_training, reviews_training.shape[1], paths=paths
     )
 
-    pd.DataFrame(history).to_csv(p.metrics / "mlp_history.csv", index=False)
+    pd.DataFrame(history).to_csv(paths.metrics / "mlp_history.csv", index=False)
 
 
 if __name__ == "__main__":  # pragma: no cover

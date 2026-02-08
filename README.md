@@ -4,10 +4,12 @@ The project classifies hotel review by whether they are positive or negative. It
 
 Some features are:
 
+- Downloading dataset from Kaggle
+- Training MLP and Baseline models
 - streamlit project for testing the MLP and the baseline with your custom reviews
 - plots for the mlp loss and f1 score in terms of the epochs
 - confusion matrix plots for MLP and baseline
-- MLP and baseline test reports in JSON for perception, recall, F1 asn support for each class and with accuracy, macro and weighted average.
+- MLP, baseline and Hugging Face model test reports in JSON for perception, recall, F1 and support for each class and with accuracy, macro and weighted average.
 
 # How to start it
 
@@ -43,7 +45,7 @@ The code is in the src folder. There are top level modules:
 
 - evaluate: tests MLP and baseline models with the test dataset. It creates test_report and confusion matrix for each one.
 
-- constants: I think is self-explanatory - all constants for the project
+- constants: self-explanatory - all constants for the project
 
 - baseline: handles logistic regression classifier training and joblib format saves\loads.
 

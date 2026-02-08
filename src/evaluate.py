@@ -24,21 +24,18 @@ from src.mlp import (MLP, iter_minibatches)
 ReportType = dict[str, dict[str, float] | float] | str
 
 
-def load_split(name: str, paths: Paths | None = None) -> tuple[list[str], np.ndarray]:
+def load_split(name: str, paths: Paths = PATHS) -> tuple[list[str], np.ndarray]:
     """Loads the split data from the given name(train or test)."""
 
-    p = paths or PATHS
-
-    df = pd.read_csv(p.data_processed / f"{name}.csv")
+    df = pd.read_csv(paths.data_processed / f"{name}.csv")
 
     return df[TEXT_COL].tolist(), df["label"].to_numpy(dtype=int)
 
 
-def plot_history(paths: Paths | None = None) -> None:
+def plot_history(paths: Paths = PATHS) -> None:
     """Plots the training history(loss and F1) of the MLP model."""
 
-    p = paths or PATHS
-    hist_path = p.metrics / "mlp_history.csv"
+    hist_path = paths.metrics / "mlp_history.csv"
 
     if not hist_path.exists():
         return
@@ -51,7 +48,7 @@ def plot_history(paths: Paths | None = None) -> None:
     plt.ylabel("Train loss")
     plt.title("MLP Train Loss")
     plt.savefig(
-        p.plots / "mlp_train_loss.png",
+        paths.plots / "mlp_train_loss.png",
         bbox_inches="tight",
     )
     plt.close()
@@ -62,7 +59,7 @@ def plot_history(paths: Paths | None = None) -> None:
     plt.ylabel("Train macro F1")
     plt.title("MLP Train Macro-F1")
     plt.savefig(
-        p.plots / "mlp_train_macro_f1.png",
+        paths.plots / "mlp_train_macro_f1.png",
         bbox_inches="tight",
     )
     plt.close()
@@ -85,7 +82,7 @@ def save_confusion_matrix(
 def eval_baseline(
     reviews_test: np.ndarray,
     expected_labels: np.ndarray,
-    paths: Paths | None = None,
+    paths: Paths = PATHS,
 ) -> tuple[ReportType, np.ndarray]:
     """Evaluates the baseline model on the test data."""
 
@@ -116,7 +113,7 @@ def eval_hf(
         expected_labels, predicted_labels, output_dict=True
     )
     cm = confusion_matrix(expected_labels, predicted_labels)
-    
+
     return report, cm
 
 
@@ -143,7 +140,6 @@ def eval_mlp(
     reviews_test: np.ndarray,
     expected_labels: np.ndarray,
     checkpoint_path: Path,
-    batch_size: int = BATCH_SIZE,
 ) -> tuple[ReportType, np.ndarray]:
     """Evaluates the MLP model with the given checkpoint path."""
 
@@ -152,7 +148,7 @@ def eval_mlp(
 
     with torch.no_grad():
         for batched_reviews, _ in iter_minibatches(
-            reviews_test, expected_labels, batch_size=batch_size, shuffle=False
+            reviews_test, expected_labels, batch_size=BATCH_SIZE, shuffle=False
         ):
             batched_reviews_t = torch.tensor(
                 batched_reviews, dtype=torch.float32, device=device
@@ -170,52 +166,42 @@ def eval_mlp(
     return report, cm
 
 
-def main(paths: Paths | None = None) -> None:
+def save_result(
+    file_name: str,
+    report: ReportType,
+    cm: np.ndarray,
+    title: str,
+    paths: Paths = PATHS,
+) -> None:
+    """Saves the report and confusion matrix to the given path."""
+
+    with open((paths.metrics / file_name).with_suffix(".json"), "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
+    save_confusion_matrix(cm, title, paths.plots / file_name)
+
+
+def main(paths: Paths = PATHS) -> None:
     """Main function to run the evaluation."""
-    p = paths or PATHS
 
-    p.metrics.mkdir(parents=True, exist_ok=True)
-    p.plots.mkdir(parents=True, exist_ok=True)
+    paths.metrics.mkdir(parents=True, exist_ok=True)
+    paths.plots.mkdir(parents=True, exist_ok=True)
 
-    reviews_test_txt, expected_labels = load_split("test", p)
+    reviews_test_txt, expected_labels = load_split("test", paths)
 
-    vec = load_vectorizer(p)
+    vec = load_vectorizer(paths)
     reviews_test = transform(vec, reviews_test_txt)
 
-    b_report, b_cm = eval_baseline(reviews_test, expected_labels, p)
+    b_report, b_cm = eval_baseline(reviews_test, expected_labels, paths)
+    save_result("baseline_test", b_report, b_cm, "Baseline Confusion Matrix (Test)", paths)
 
-    with open(p.metrics / "baseline_test_report.json", "w", encoding="utf-8") as f:
-        json.dump(b_report, f, ensure_ascii=False, indent=2)
-
-    save_confusion_matrix(
-        b_cm,
-        "Baseline Confusion Matrix (Test)",
-        p.plots / "baseline_cm.png",
-    )
-
-    m_report, m_cm = eval_mlp(reviews_test, expected_labels, p.artifacts / "mlp_last.pt")
-
-    with open(p.metrics / "mlp_test_report.json", "w", encoding="utf-8") as f:
-        json.dump(m_report, f, ensure_ascii=False, indent=2)
-
-    save_confusion_matrix(
-        m_cm,
-        "MLP Confusion Matrix (Test)",
-        p.plots / "mlp_cm.png",
-    )
+    m_report, m_cm = eval_mlp(reviews_test, expected_labels, paths.artifacts / "mlp_last.pt")
+    save_result("mlp_test", m_report, m_cm, "MLP Confusion Matrix (Test)", paths)
 
     hf_report, hf_cm = eval_hf(reviews_test_txt, expected_labels)
+    save_result("hf_test", hf_report, hf_cm, "Hugging Face Confusion Matrix (Test)", paths)
 
-    with open(p.metrics / "hf_test_report.json", "w", encoding="utf-8") as f:
-        json.dump(hf_report, f, ensure_ascii=False, indent=2)
-
-    save_confusion_matrix(
-        hf_cm,
-        "Hugging Face Confusion Matrix (Test)",
-        p.plots / "hf_cm.png",
-    )
-
-    plot_history(p)
+    plot_history(paths)
 
 
 if __name__ == "__main__":

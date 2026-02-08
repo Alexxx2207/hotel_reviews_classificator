@@ -1,6 +1,5 @@
 """
-Hugging Face pre-trained model for hotel review sentiment classification.
-Uses kmack/HotelReviewClassifier (DistilBERT fine-tuned on hotel reviews).
+API to use the Hugging Face pre-trained model for hotel review sentiment classification.
 """
 
 from __future__ import annotations

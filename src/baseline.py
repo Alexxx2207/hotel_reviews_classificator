@@ -23,18 +23,16 @@ def train_baseline(
 
 def save_baseline(
     classifier: LogisticRegression,
-    paths: Paths | None = None,
+    paths: Paths = PATHS,
 ) -> None:
     """Saves a baseline logistic regression classifier in the artifacts directory."""
 
-    p = paths or PATHS
-    p.artifacts.mkdir(parents=True, exist_ok=True)
+    paths.artifacts.mkdir(parents=True, exist_ok=True)
 
-    joblib.dump(classifier, p.artifacts / "baseline_logreg.joblib")
+    joblib.dump(classifier, paths.artifacts / "baseline_logreg.joblib")
 
 
-def load_baseline(paths: Paths | None = None) -> LogisticRegression:
+def load_baseline(paths: Paths = PATHS) -> LogisticRegression:
     """Loads a baseline logistic regression classifier from the artifacts directory."""
 
-    p = paths or PATHS
-    return joblib.load(p.artifacts / "baseline_logreg.joblib")
+    return joblib.load(paths.artifacts / "baseline_logreg.joblib")
