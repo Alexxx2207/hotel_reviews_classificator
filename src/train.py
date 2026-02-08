@@ -71,7 +71,6 @@ def train_mlp_only_train(
         for reviews_batched, labels_batched in tqdm(
             iter_minibatches(reviews_training, label_training, BATCH_SIZE, shuffle=True),
             desc=f"Epoch {epoch}/{EPOCHS}",
-            leave=False,
         ):
             reviews_batched_t = torch.tensor(reviews_batched, dtype=torch.float32, device=device)
             labels_batched_t = torch.tensor(labels_batched, dtype=torch.int64, device=device)

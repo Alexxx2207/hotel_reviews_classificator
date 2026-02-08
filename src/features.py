@@ -31,7 +31,7 @@ def fit_vectorizer(reviews: list[str]) -> tuple[TfidfVectorizer, np.ndarray]:
 
 
 def transform(vectorizer: TfidfVectorizer, reviews: list[str]) -> np.ndarray:
-    """Transforms the reviews using the given vectorizer; returns dense matrix."""
+    """Transforms the reviews using the given vectorizer"""
 
     return cast(
         np.ndarray,
