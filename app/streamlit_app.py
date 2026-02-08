@@ -63,18 +63,11 @@ def load_models() -> tuple[
     """Load ML models and vectorizer with caching."""
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    try:
-        vectorizer = load_vectorizer()
-    except FileNotFoundError:
-        st.error("Vectorizer not found. Please run the training script first.")
-        st.stop()
+    vectorizer = load_vectorizer()
 
     try:
         baseline_model = load_baseline()
     except FileNotFoundError:
-        st.warning(
-            "Baseline model not found. Only MLP predictions will be available."
-        )
         baseline_model = None
 
     mlp_model: Optional[MLP] = None
@@ -92,24 +85,16 @@ def load_models() -> tuple[
             mlp_model.load_state_dict(checkpoint["model_state"])
             mlp_model.eval()
             mlp_device = device
-        except Exception as e:
-            st.warning(f"Could not load MLP model: {e}")
-    else:
-        st.warning(
-            "MLP model checkpoint not found. "
-            "Only baseline predictions will be available."
-        )
+        except Exception:
+            pass
 
-    hf_model: Optional[Any] = None
-    hf_tokenizer: Optional[Any] = None
-    hf_device: Optional[torch.device] = None
+    hf_model = None
+    hf_tokenizer = None
+    hf_device = None
     try:
         hf_model, hf_tokenizer, hf_device = load_hf_model()
-    except Exception as e:
-        st.warning(
-            f"Hugging Face model not loaded: {e}. "
-            "Check your internet connection or try again later."
-        )
+    except Exception:
+        pass
 
     return (
         vectorizer,
@@ -175,15 +160,31 @@ def main() -> None:
     st.markdown("---")
 
     with st.spinner("Loading models..."):
-        (
-            vectorizer,
-            baseline_model,
-            mlp_model,
-            mlp_device,
-            hf_model,
-            hf_tokenizer,
-            hf_device,
-        ) = load_models()
+        try:
+            (
+                vectorizer,
+                baseline_model,
+                mlp_model,
+                mlp_device,
+                hf_model,
+                hf_tokenizer,
+                hf_device,
+            ) = load_models()
+        except FileNotFoundError as e:
+            st.error(
+                "Vectorizer or artifacts not found. Run the training script first: "
+                "`uv run python -m src.train`"
+            )
+            st.stop()
+        except Exception as e:
+            st.error(f"Failed to load models: {e}")
+            st.stop()
+
+    if hf_model is None:
+        st.info(
+            "Hugging Face model is not loaded (e.g. low memory or no network). "
+            "Baseline and MLP will still work."
+        )
 
     col1, col2 = st.columns([2, 1])
 
@@ -239,22 +240,33 @@ def main() -> None:
             if not review_text.strip():
                 st.warning("Please enter a review text before classifying.")
             else:
-                baseline_pred, baseline_probs = predict_baseline(
-                    vectorizer, baseline_model, review_text
-                )
-                mlp_pred, mlp_probs = predict_mlp(
-                    vectorizer, mlp_model, mlp_device, review_text
-                )
-
-                hf_pred: Optional[int] = None
-                hf_probs: Optional[np.ndarray] = None
-                
-                if hf_model is not None and hf_tokenizer is not None and hf_device is not None:
-                    predictions, probs = predict_hf(
-                        hf_model, hf_tokenizer, hf_device, [review_text]
+                try:
+                    baseline_pred, baseline_probs = predict_baseline(
+                        vectorizer, baseline_model, review_text
                     )
-                    hf_pred = int(predictions[0])
-                    hf_probs = probs[0]
+                except (ValueError, Exception) as e:
+                    st.error(f"Baseline prediction failed: {e}")
+                    baseline_pred, baseline_probs = None, None
+
+                try:
+                    mlp_pred, mlp_probs = predict_mlp(
+                        vectorizer, mlp_model, mlp_device, review_text
+                    )
+                except Exception as e:
+                    st.error(f"MLP prediction failed: {e}")
+                    mlp_pred, mlp_probs = None, None
+
+                hf_pred = None
+                hf_probs = None
+                if hf_model is not None and hf_tokenizer is not None and hf_device is not None:
+                    try:
+                        predictions, probs = predict_hf(
+                            hf_model, hf_tokenizer, hf_device, [review_text]
+                        )
+                        hf_pred = int(predictions[0])
+                        hf_probs = probs[0]
+                    except Exception as e:
+                        st.error(f"Hugging Face prediction failed: {e}")
 
                 st.markdown("---")
 
